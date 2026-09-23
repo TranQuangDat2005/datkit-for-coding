@@ -185,7 +185,15 @@ Follow this execution flow:
 
 7. Identify Key Entities when data is involved.
 
-8. Write the completed specification to `SPEC_FILE` using the existing template structure.
+8. Write the completed specification to `SPEC_FILE`.
+
+   Template compliance (MUST):
+
+   - `SPEC_FILE` is an exact copy of the active `spec-template`; keep that structure.
+   - Do not add, remove, rename, or reorder section headings from the template.
+   - Fill placeholders in place; never rewrite the template's own instructional text.
+   - If a section does not apply, keep the heading and write "N/A" with a one-line reason.
+   - Match the template's formatting for status markers, lists, and tables.
 
 ### 6. Specification Quality Validation
 
@@ -206,6 +214,12 @@ After writing the initial spec, validate it against these quality criteria:
       - [ ] Focused on user value and business needs
       - [ ] Written for non-technical stakeholders
       - [ ] All mandatory sections completed
+
+      ## Template Structure
+
+      - [ ] All spec-template section headings present, unchanged, in order
+      - [ ] No extra top-level sections beyond the template
+      - [ ] Placeholders filled in place (template text not rewritten)
 
       ## Requirement Completeness
 

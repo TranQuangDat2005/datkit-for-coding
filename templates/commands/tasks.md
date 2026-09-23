@@ -214,6 +214,8 @@ Generate `tasks.md` theo template đã resolve.
 
 Rules:
 
+- Tuân thủ tuyệt đối cấu trúc template: giữ nguyên mọi heading, không thêm/bỏ/đổi tên/đảo thứ tự section, không viết lại phần chữ định sẵn của template.
+- Section không áp dụng: giữ heading và ghi "N/A" kèm lý do ngắn.
 - Không force fixed phases như Setup → Foundational → User Story → Polish.
 - Tổ chức task theo dependency order rõ nhất.
 - Có thể group theo logical component, user story hoặc CORE/SHELL nếu điều đó giúp đọc dễ hơn.

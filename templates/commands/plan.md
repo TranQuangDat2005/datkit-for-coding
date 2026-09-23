@@ -70,7 +70,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Treat project-wide technology, conventions, approved dependencies, forbidden patterns, and architectural constraints as inherited context. Do not ask for or duplicate information that is already defined there.
    - If project-level context conflicts, the constitution is authoritative. Surface any unresolved conflict instead of silently choosing.
 
-3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
+3. **Execute plan workflow**: IMPL_PLAN is an exact copy of the active `plan-template`. Follow its structure to:
+   - Keep every heading from the template: do not add, remove, rename, or reorder sections; fill placeholders in place and never rewrite the template's own text. Sections that do not apply keep their heading with "N/A" and a one-line reason.
    - Fill **feature-specific** Technical Context using the inherited project context.
    - Do not repeat the project-wide tech stack unless this feature changes, extends, or depends on a specific part of it.
    - Mark only unresolved **feature-specific technical decisions** as "NEEDS CLARIFICATION".
