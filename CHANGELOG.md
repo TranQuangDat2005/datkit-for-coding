@@ -6,6 +6,7 @@
 
 ### Changed
 
+- feat(scripts): add --feature-name fallback to create-new-feature (exit 3 + ASK_USER_FOR_FEATURE_NAME JSON when the branch is not a valid feature branch; bare kebab names are auto-numbered from specs/)
 - feat(templates): strip AI guidance comments from final artifacts
 - feat(templates): report extensions.yml parse errors instead of skipping silently
 - docs: add Spec Kit attribution for MIT (LICENSE, NOTICE, README, CITATION.cff, .zenodo.json)

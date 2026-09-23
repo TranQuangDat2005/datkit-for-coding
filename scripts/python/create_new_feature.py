@@ -10,6 +10,13 @@ Example:
   Current Git branch: 003-user-auth
   FEATURE_NAME:       003-user-auth
   FEATURE_DIR:        specs/003-user-auth
+
+When the current branch is not a valid feature branch (or no branch can be
+read, e.g. detached HEAD), the script exits with code 3 and --json output
+contains {"ACTION": "ASK_USER_FOR_FEATURE_NAME", ...}. The caller can then
+re-run with --feature-name <name> to set the feature name explicitly.
+A bare kebab name (e.g. "user-auth") is auto-numbered by scanning specs/
+for the next sequential number (e.g. "001-user-auth").
 """
 
 from __future__ import annotations
@@ -55,11 +62,16 @@ _TIMESTAMP_BRANCH_PATTERN = re.compile(
     rf"^(\d{{8}}-\d{{6}})-({_NAME_PART_PATTERN})$"
 )
 _SEQUENTIAL_BRANCH_PATTERN = re.compile(rf"^(\d{{3,}})-({_NAME_PART_PATTERN})$")
+_BARE_NAME_PATTERN = re.compile(rf"^{_NAME_PART_PATTERN}$")
+
+# Exit code signalling "re-run with --feature-name after asking the user".
+EXIT_FEATURE_NAME_REQUIRED = 3
 
 
 def _usage(argv0: str) -> str:
     return (
-        f"Usage: {argv0} [--json] [--dry-run] [--allow-existing-feature] [--help]"
+        f"Usage: {argv0} [--json] [--dry-run] [--allow-existing-feature] "
+        "[--feature-name <name>] [--help]"
     )
 
 
@@ -81,7 +93,18 @@ Options:
   --json                   Output machine-readable JSON
   --dry-run                Compute names/paths without creating files
   --allow-existing-feature Reuse an existing feature directory
+  --feature-name <name>    Set the feature name explicitly (overrides the
+                           branch). Accepts '003-user-auth',
+                           'YYYYMMDD-HHMMSS-user-auth', or a bare kebab name
+                           such as 'user-auth' (auto-numbered by scanning
+                           specs/ for the next sequential number)
   --help, -h               Show this help message
+
+Exit codes:
+  0  success
+  1  hard error (bad options, invalid --feature-name, template failure)
+  3  feature name required: re-run with --feature-name <name>; --json
+     output contains {{"ACTION": "ASK_USER_FOR_FEATURE_NAME", ...}}
 """
 
 
@@ -90,14 +113,18 @@ class Args:
     json_mode: bool = False
     dry_run: bool = False
     allow_existing: bool = False
+    feature_name_input: str = ""
 
 
 def _parse_args(argv: list[str], argv0: str) -> Args:
     json_mode = False
     dry_run = False
     allow_existing = False
+    feature_name_input = ""
 
-    for arg in argv:
+    index = 0
+    while index < len(argv):
+        arg = argv[index]
         if arg == "--json":
             json_mode = True
         elif arg == "--dry-run":
@@ -105,6 +132,15 @@ def _parse_args(argv: list[str], argv0: str) -> Args:
         elif arg in {"--allow-existing-feature", "--allow-existing-branch"}:
             # --allow-existing-branch is a deprecated alias kept for back-compat.
             allow_existing = True
+        elif arg == "--feature-name":
+            if index + 1 >= len(argv):
+                print("Error: --feature-name requires a value", file=sys.stderr)
+                print(_usage(argv0), file=sys.stderr)
+                raise SystemExit(1)
+            feature_name_input = argv[index + 1]
+            index += 1
+        elif arg.startswith("--feature-name="):
+            feature_name_input = arg.split("=", 1)[1]
         elif arg in {"--help", "-h"}:
             sys.stdout.write(_help_text(argv0))
             raise SystemExit(0)
@@ -112,11 +148,13 @@ def _parse_args(argv: list[str], argv0: str) -> Args:
             print(f"Error: Unexpected argument '{arg}'", file=sys.stderr)
             print(_usage(argv0), file=sys.stderr)
             raise SystemExit(1)
+        index += 1
 
     return Args(
         json_mode=json_mode,
         dry_run=dry_run,
         allow_existing=allow_existing,
+        feature_name_input=feature_name_input,
     )
 
 
@@ -151,6 +189,40 @@ def _get_current_branch(repo_root: Path) -> str:
     return lines[0].strip() if lines else ""
 
 
+def _next_sequential_number(specs_dir: Path) -> int:
+    """Global maximum NNN- prefix in specs/ plus one (timestamp dirs excluded)."""
+    max_num = 0
+    if specs_dir.is_dir():
+        for entry in specs_dir.iterdir():
+            if not entry.is_dir():
+                continue
+            if _TIMESTAMP_BRANCH_PATTERN.match(entry.name):
+                # Timestamp-shaped names carry no sequential number.
+                continue
+            match = re.match(r"^(\d{3,})-", entry.name)
+            if match:
+                max_num = max(max_num, int(match.group(1)))
+    return max_num + 1
+
+
+def _ask_user_for_feature_name(
+    message: str, branch_name: str, json_mode: bool
+) -> int:
+    """Exit-3 path: a recoverable failure solved by --feature-name."""
+    print(message, file=sys.stderr)
+    if json_mode:
+        sys.stdout.write(
+            _json_line(
+                {
+                    "ACTION": "ASK_USER_FOR_FEATURE_NAME",
+                    "ERROR": message,
+                    "BRANCH_NAME": branch_name,
+                }
+            )
+        )
+    return EXIT_FEATURE_NAME_REQUIRED
+
+
 def main(argv: list[str] | None = None) -> int:
     argv0 = sys.argv[0]
     args = _parse_args(list(argv if argv is not None else sys.argv[1:]), argv0)
@@ -167,47 +239,97 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     current_branch = _get_current_branch(repo_root)
-    if not current_branch:
-        print(
-            "Spec Kit could not determine the current Git branch. "
-            "Checkout a feature branch first.",
-            file=sys.stderr,
-        )
-        return 1
 
-    # Keep branch name and feature directory basename identical.
-    # Branch names containing '/' or '\' are rejected instead of rewritten.
-    if "/" in current_branch or "\\" in current_branch:
-        print(
-            f"Current Git branch '{current_branch}' contains a path separator. "
-            "Spec Kit requires a single feature name such as '003-user-auth' "
-            "so the branch name and feature directory basename remain identical.",
-            file=sys.stderr,
-        )
-        return 1
+    # Explicit --feature-name overrides the branch-derived name.
+    explicit_name = args.feature_name_input.strip()
+    if explicit_name:
+        if "/" in explicit_name or "\\" in explicit_name:
+            print(
+                f"Feature name '{explicit_name}' contains a path separator. "
+                "Provide a single name such as '003-user-auth' or a bare "
+                "kebab name such as 'user-auth'.",
+                file=sys.stderr,
+            )
+            return 1
 
-    # The timestamp pattern is checked first so '20260923-134500-user-auth'
-    # (whose leading '20260923' also satisfies \d{3,}) is not mistaken for a
-    # sequential feature number.
-    timestamp_match = _TIMESTAMP_BRANCH_PATTERN.match(current_branch)
-    sequential_match = _SEQUENTIAL_BRANCH_PATTERN.match(current_branch)
+        # The timestamp pattern is checked first so '20260923-134500-user-auth'
+        # (whose leading '20260923' also satisfies \d{3,}) is not mistaken for
+        # a sequential feature number.
+        timestamp_match = _TIMESTAMP_BRANCH_PATTERN.match(explicit_name)
+        sequential_match = _SEQUENTIAL_BRANCH_PATTERN.match(explicit_name)
 
-    if timestamp_match is not None:
-        numbering_mode = "timestamp"
-        feature_num = timestamp_match.group(1)
-    elif sequential_match is not None:
-        numbering_mode = "sequential"
-        feature_num = sequential_match.group(1)
+        if timestamp_match is not None:
+            numbering_mode = "timestamp"
+            feature_num = timestamp_match.group(1)
+            feature_name = explicit_name
+        elif sequential_match is not None:
+            numbering_mode = "sequential"
+            feature_num = sequential_match.group(1)
+            feature_name = explicit_name
+        elif _BARE_NAME_PATTERN.match(explicit_name):
+            specs_dir = repo_root / "specs"
+            next_num = _next_sequential_number(specs_dir)
+            feature_num = f"{next_num:03d}"
+            feature_name = f"{feature_num}-{explicit_name}"
+            numbering_mode = "sequential"
+        else:
+            print(
+                f"Feature name '{explicit_name}' is not a valid Spec Kit "
+                "feature name. Expected '003-user-auth', "
+                "'YYYYMMDD-HHMMSS-user-auth', or a bare kebab name such as "
+                "'user-auth'.",
+                file=sys.stderr,
+            )
+            return 1
+
+        branch_name = current_branch
     else:
-        print(
-            f"Current Git branch '{current_branch}' is not a Spec Kit feature "
-            "branch. Expected '003-user-auth' or 'YYYYMMDD-HHMMSS-user-auth'.",
-            file=sys.stderr,
-        )
-        return 1
+        if not current_branch:
+            return _ask_user_for_feature_name(
+                "Spec Kit could not determine the current Git branch. "
+                "Checkout a feature branch first, or re-run with "
+                "--feature-name <name>.",
+                "",
+                args.json_mode,
+            )
 
-    feature_name = current_branch
-    branch_name = current_branch
+        # Keep branch name and feature directory basename identical.
+        # Branch names containing '/' or '\' are rejected instead of rewritten.
+        if "/" in current_branch or "\\" in current_branch:
+            return _ask_user_for_feature_name(
+                f"Current Git branch '{current_branch}' contains a path "
+                "separator. Spec Kit requires a single feature name such as "
+                "'003-user-auth' so the branch name and feature directory "
+                "basename remain identical. Re-run with --feature-name <name> "
+                "to set the feature name explicitly.",
+                current_branch,
+                args.json_mode,
+            )
+
+        # The timestamp pattern is checked first so '20260923-134500-user-auth'
+        # (whose leading '20260923' also satisfies \d{3,}) is not mistaken for
+        # a sequential feature number.
+        timestamp_match = _TIMESTAMP_BRANCH_PATTERN.match(current_branch)
+        sequential_match = _SEQUENTIAL_BRANCH_PATTERN.match(current_branch)
+
+        if timestamp_match is not None:
+            numbering_mode = "timestamp"
+            feature_num = timestamp_match.group(1)
+        elif sequential_match is not None:
+            numbering_mode = "sequential"
+            feature_num = sequential_match.group(1)
+        else:
+            return _ask_user_for_feature_name(
+                f"Current Git branch '{current_branch}' is not a Spec Kit "
+                "feature branch. Expected '003-user-auth' or "
+                "'YYYYMMDD-HHMMSS-user-auth'. Re-run with --feature-name "
+                "<name> to set the feature name explicitly.",
+                current_branch,
+                args.json_mode,
+            )
+
+        feature_name = current_branch
+        branch_name = current_branch
 
     specs_dir = repo_root / "specs"
     feature_dir = specs_dir / feature_name

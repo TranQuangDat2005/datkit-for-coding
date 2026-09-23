@@ -198,7 +198,7 @@ def test_all_variants_dry_run_match(repo: Path) -> None:
         "two_digit_number",
     ],
 )
-def test_python_reject_invalid_branch(repo: Path, branch: str) -> None:
+def test_python_invalid_branch_asks_for_feature_name(repo: Path, branch: str) -> None:
     _git(repo, "checkout", "-b", branch)
     expected = (
         f"Current Git branch '{branch}' is not a Spec Kit feature branch. "
@@ -206,15 +206,19 @@ def test_python_reject_invalid_branch(repo: Path, branch: str) -> None:
     )
 
     py = run(py_cmd(repo, SCRIPT, "--json"), repo)
-    assert py.returncode == 1
+    assert py.returncode == 3
     assert expected in _normalized_error_text(py.stderr, repo)
+    payload = _normalized_payload(py)
+    assert payload["ACTION"] == "ASK_USER_FOR_FEATURE_NAME"
+    assert payload["BRANCH_NAME"] == branch
+    assert expected in payload["ERROR"]
 
 
 @requires_bash
 @pytest.mark.parametrize(
     "branch", ["main", "003userauth", "003-user--auth", "12-user-auth"]
 )
-def test_bash_reject_invalid_branch(repo: Path, branch: str) -> None:
+def test_bash_invalid_branch_asks_for_feature_name(repo: Path, branch: str) -> None:
     _git(repo, "checkout", "-b", branch)
     expected = (
         f"Current Git branch '{branch}' is not a Spec Kit feature branch. "
@@ -222,12 +226,15 @@ def test_bash_reject_invalid_branch(repo: Path, branch: str) -> None:
     )
 
     bash = run(bash_cmd(repo, SCRIPT, "--json"), repo)
-    assert bash.returncode == 1
+    assert bash.returncode == 3
     assert expected in _normalized_error_text(bash.stderr, repo)
+    payload = _normalized_payload(bash)
+    assert payload["ACTION"] == "ASK_USER_FOR_FEATURE_NAME"
+    assert payload["BRANCH_NAME"] == branch
 
 
 @requires_powershell
-def test_powershell_reject_invalid_branch(repo: Path) -> None:
+def test_powershell_invalid_branch_asks_for_feature_name(repo: Path) -> None:
     _git(repo, "checkout", "-b", "main")
     expected = (
         "Current Git branch 'main' is not a Spec Kit feature branch. "
@@ -235,30 +242,63 @@ def test_powershell_reject_invalid_branch(repo: Path) -> None:
     )
 
     ps = run(ps_cmd(repo, SCRIPT, "-Json"), repo)
-    assert ps.returncode == 1
+    assert ps.returncode == 3
     assert expected in _normalized_error_text(ps.stderr, repo)
+    payload = _normalized_payload(ps)
+    assert payload["ACTION"] == "ASK_USER_FOR_FEATURE_NAME"
+    assert payload["BRANCH_NAME"] == "main"
 
 
-def test_python_reject_path_separator_branch(repo: Path) -> None:
+@requires_bash
+def test_bash_ask_action_matches_python(repo_pair: tuple[Path, Path]) -> None:
+    repo_a, repo_b = repo_pair
+    for repo in (repo_a, repo_b):
+        _git(repo, "checkout", "-b", "main")
+
+    bash = run(bash_cmd(repo_a, SCRIPT, "--json"), repo_a)
+    py = run(py_cmd(repo_b, SCRIPT, "--json"), repo_b)
+
+    assert bash.returncode == py.returncode == 3
+    assert _normalized_payload(bash) == _normalized_payload(py)
+
+
+def test_python_ask_action_non_json_mode(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+
+    py = run(py_cmd(repo, SCRIPT), repo)
+    assert py.returncode == 3
+    assert py.stdout == ""
+    assert "is not a Spec Kit feature branch" in _normalized_error_text(
+        py.stderr, repo
+    )
+
+
+def test_python_path_separator_branch_asks_for_feature_name(repo: Path) -> None:
     _git(repo, "checkout", "-b", "feature/003-user-auth")
     expected = "Current Git branch 'feature/003-user-auth' contains a path separator."
 
     py = run(py_cmd(repo, SCRIPT, "--json"), repo)
-    assert py.returncode == 1
+    assert py.returncode == 3
     assert expected in _normalized_error_text(py.stderr, repo)
+    payload = _normalized_payload(py)
+    assert payload["ACTION"] == "ASK_USER_FOR_FEATURE_NAME"
+    assert payload["BRANCH_NAME"] == "feature/003-user-auth"
 
 
-def test_python_reject_detached_head(repo: Path) -> None:
+def test_python_detached_head_asks_for_feature_name(repo: Path) -> None:
     head = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
     ).stdout.strip()
     _git(repo, "checkout", "--detach", head)
 
     py = run(py_cmd(repo, SCRIPT, "--json"), repo)
-    assert py.returncode == 1
+    assert py.returncode == 3
     assert "could not determine the current Git branch" in _normalized_error_text(
         py.stderr, repo
     )
+    payload = _normalized_payload(py)
+    assert payload["ACTION"] == "ASK_USER_FOR_FEATURE_NAME"
+    assert payload["BRANCH_NAME"] == ""
 
 
 def test_python_reject_non_git_directory(tmp_path: Path) -> None:
@@ -272,6 +312,174 @@ def test_python_reject_non_git_directory(tmp_path: Path) -> None:
     py = run(py_cmd(repo, SCRIPT, "--json"), repo)
     assert py.returncode == 1
     assert "could not read a Git repository" in _normalized_error_text(py.stderr, repo)
+
+
+# -- Explicit --feature-name fallback ---------------------------------------
+
+
+def test_python_feature_name_autonumber_on_invalid_branch(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+
+    py = run(py_cmd(repo, SCRIPT, "--json", "--feature-name", "user-auth"), repo)
+    assert py.returncode == 0
+    payload = _normalized_payload(py)
+    assert payload["FEATURE_NAME"] == "001-user-auth"
+    assert payload["BRANCH_NAME"] == "main"
+    assert payload["FEATURE_NUM"] == "001"
+    assert payload["NUMBERING_MODE"] == "sequential"
+    assert str(payload["FEATURE_DIR"]).endswith("specs/001-user-auth")
+    spec = repo / "specs" / "001-user-auth" / "spec.md"
+    assert spec.read_text(encoding="utf-8") == TEMPLATE_BODY
+    feature_json = json.loads(
+        (repo / ".specify" / "feature.json").read_text(encoding="utf-8")
+    )
+    assert feature_json == {"feature_directory": "specs/001-user-auth"}
+
+
+@requires_bash
+def test_bash_feature_name_autonumber_on_invalid_branch(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+
+    bash = run(bash_cmd(repo, SCRIPT, "--json", "--feature-name", "user-auth"), repo)
+    assert bash.returncode == 0
+    payload = _normalized_payload(bash)
+    assert payload["FEATURE_NAME"] == "001-user-auth"
+    assert payload["BRANCH_NAME"] == "main"
+    assert payload["FEATURE_NUM"] == "001"
+    assert payload["NUMBERING_MODE"] == "sequential"
+    assert (repo / "specs" / "001-user-auth" / "spec.md").is_file()
+
+
+@requires_powershell
+def test_powershell_feature_name_autonumber_on_invalid_branch(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+
+    ps = run(ps_cmd(repo, SCRIPT, "-Json", "-FeatureName", "user-auth"), repo)
+    assert ps.returncode == 0
+    payload = _normalized_payload(ps)
+    assert payload["FEATURE_NAME"] == "001-user-auth"
+    assert payload["BRANCH_NAME"] == "main"
+    assert payload["FEATURE_NUM"] == "001"
+    assert payload["NUMBERING_MODE"] == "sequential"
+    assert (repo / "specs" / "001-user-auth" / "spec.md").is_file()
+
+
+def test_python_feature_name_autonumber_scans_existing(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+    specs = repo / "specs"
+    (specs / "003-foo").mkdir(parents=True)
+    (specs / "007-bar").mkdir()
+    (specs / "20260923-134500-pay").mkdir()  # timestamp dirs are ignored
+
+    py = run(py_cmd(repo, SCRIPT, "--json", "--feature-name", "new-thing"), repo)
+    assert py.returncode == 0
+    payload = _normalized_payload(py)
+    assert payload["FEATURE_NAME"] == "008-new-thing"
+    assert payload["FEATURE_NUM"] == "008"
+
+
+@requires_bash
+def test_bash_feature_name_autonumber_scans_existing(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+    specs = repo / "specs"
+    (specs / "003-foo").mkdir(parents=True)
+    (specs / "007-bar").mkdir()
+    (specs / "20260923-134500-pay").mkdir()
+
+    bash = run(bash_cmd(repo, SCRIPT, "--json", "--feature-name", "new-thing"), repo)
+    assert bash.returncode == 0
+    payload = _normalized_payload(bash)
+    assert payload["FEATURE_NAME"] == "008-new-thing"
+
+
+def test_python_feature_name_explicit_sequential(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+
+    py = run(py_cmd(repo, SCRIPT, "--json", "--feature-name", "012-explicit-thing"), repo)
+    assert py.returncode == 0
+    payload = _normalized_payload(py)
+    assert payload["FEATURE_NAME"] == "012-explicit-thing"
+    assert payload["FEATURE_NUM"] == "012"
+    assert payload["NUMBERING_MODE"] == "sequential"
+
+
+def test_python_feature_name_timestamp(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+
+    py = run(
+        py_cmd(repo, SCRIPT, "--json", "--feature-name", "20260923-134500-pay"),
+        repo,
+    )
+    assert py.returncode == 0
+    payload = _normalized_payload(py)
+    assert payload["FEATURE_NAME"] == "20260923-134500-pay"
+    assert payload["FEATURE_NUM"] == "20260923-134500"
+    assert payload["NUMBERING_MODE"] == "timestamp"
+
+
+@pytest.mark.parametrize(
+    "bad_name",
+    ["feature/x", "bad_name", "bad--name", "003-", "-lead", "trail-"],
+    ids=["path_sep", "underscore", "double_hyphen", "empty_suffix", "lead_hyphen", "trail_hyphen"],
+)
+def test_python_reject_invalid_feature_name(repo: Path, bad_name: str) -> None:
+    _git(repo, "checkout", "-b", "main")
+
+    py = run(py_cmd(repo, SCRIPT, "--json", "--feature-name", bad_name), repo)
+    assert py.returncode == 1
+    assert "Feature name" in _normalized_error_text(py.stderr, repo)
+
+
+def test_python_feature_name_detached_head(repo: Path) -> None:
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
+    ).stdout.strip()
+    _git(repo, "checkout", "--detach", head)
+
+    py = run(py_cmd(repo, SCRIPT, "--json", "--feature-name", "user-auth"), repo)
+    assert py.returncode == 0
+    payload = _normalized_payload(py)
+    assert payload["FEATURE_NAME"] == "001-user-auth"
+    assert payload["BRANCH_NAME"] == ""
+
+
+def test_python_feature_name_overrides_valid_branch(repo: Path) -> None:
+    py = run(py_cmd(repo, SCRIPT, "--json", "--feature-name", "004-other"), repo)
+    assert py.returncode == 0
+    payload = _normalized_payload(py)
+    assert payload["FEATURE_NAME"] == "004-other"
+    assert payload["BRANCH_NAME"] == "003-user-auth"
+    assert (repo / "specs" / "004-other" / "spec.md").is_file()
+
+
+def test_python_feature_name_equals_form(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+
+    py = run(py_cmd(repo, SCRIPT, "--json", "--feature-name=eq-form"), repo)
+    assert py.returncode == 0
+    payload = _normalized_payload(py)
+    assert payload["FEATURE_NAME"] == "001-eq-form"
+
+
+def test_python_feature_name_missing_value_errors(repo: Path) -> None:
+    py = run(py_cmd(repo, SCRIPT, "--json", "--feature-name"), repo)
+    assert py.returncode == 1
+    assert "--feature-name requires a value" in _normalized_error_text(py.stderr, repo)
+
+
+def test_python_feature_name_dry_run_creates_nothing(repo: Path) -> None:
+    _git(repo, "checkout", "-b", "main")
+
+    py = run(
+        py_cmd(repo, SCRIPT, "--json", "--dry-run", "--feature-name", "user-auth"),
+        repo,
+    )
+    assert py.returncode == 0
+    payload = _normalized_payload(py)
+    assert payload["FEATURE_NAME"] == "001-user-auth"
+    assert payload["DRY_RUN"] is True
+    assert not (repo / "specs").exists()
+    assert not (repo / ".specify" / "feature.json").exists()
 
 
 # -- Existing feature directory -------------------------------------------

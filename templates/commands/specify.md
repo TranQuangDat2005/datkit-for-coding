@@ -108,13 +108,35 @@ Required invariant:
 FEATURE_NAME == BRANCH_NAME == basename(FEATURE_DIR)
 ```
 
+Invariant này áp dụng khi feature name lấy từ branch hiện tại. Nếu chạy với
+`--feature-name` (hoặc `-FeatureName` trong PowerShell) thì invariant là:
+
+```text
+FEATURE_NAME == basename(FEATURE_DIR)
+```
+
+khi đó `BRANCH_NAME` chỉ mang tính thông tin (branch hiện tại, có thể khác
+feature name hoặc rỗng với detached HEAD).
+
 Nếu script fail:
 
-- **STOP**;
-- không tự tạo branch;
-- không tự đoán feature name;
-- không fallback sang logic tạo folder bằng AI;
-- report lỗi và yêu cầu user checkout đúng feature branch.
+- **Exit code 3** — script xuất JSON chứa
+  `"ACTION": "ASK_USER_FOR_FEATURE_NAME"` (kèm `ERROR` và `BRANCH_NAME`):
+  1. Hỏi user muốn đặt tên feature là gì.
+  2. Chấp nhận: `003-user-auth`, `20260923-134500-user-auth`, hoặc tên kebab
+     trần như `user-auth` (script sẽ tự đánh số tiếp theo bằng cách quét
+     `specs/`, ví dụ thành `001-user-auth`).
+  3. Chạy lại script với flag tên feature:
+     - `{SCRIPT} --feature-name <name>` (bash/python)
+     - `{SCRIPT} -FeatureName <name>` (PowerShell)
+  4. Tiếp tục workflow bình thường với JSON output mới.
+- **Exit code 1** (lỗi cứng khác):
+  - **STOP**;
+  - không tự tạo branch;
+  - không tự đoán feature name;
+  - không fallback sang logic tạo folder bằng AI;
+  - report lỗi và yêu cầu user xử lý (checkout đúng feature branch, hoặc
+    cung cấp tên feature hợp lệ nếu lỗi do `--feature-name` không hợp lệ).
 
 Nếu feature directory đã tồn tại và user đang cố mở lại đúng feature,
 có thể chạy:
@@ -358,9 +380,9 @@ branch name == feature name == feature directory basename
 
 ## Done When
 
-- [ ] Git branch hiện tại đã tồn tại trước khi Spec Kit chạy.
+- [ ] Git branch hiện tại đã tồn tại trước khi Spec Kit chạy (hoặc tên feature được đặt rõ ràng qua `--feature-name` khi script exit 3).
 - [ ] Spec Kit không tạo/switch/rename/delete Git branch.
-- [ ] `FEATURE_NAME == BRANCH_NAME == basename(FEATURE_DIR)`.
+- [ ] `FEATURE_NAME == basename(FEATURE_DIR)`; khi không dùng `--feature-name` thì `FEATURE_NAME == BRANCH_NAME` nữa.
 - [ ] `SPEC_FILE` tồn tại trong đúng feature directory.
 - [ ] `.specify/feature.json` trỏ tới feature directory hiện tại.
 - [ ] Specification được viết và kiểm tra bằng `checklists/requirements.md`.

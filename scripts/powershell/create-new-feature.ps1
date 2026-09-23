@@ -10,6 +10,13 @@
 #   Current Git branch: 003-user-auth
 #   FEATURE_NAME:       003-user-auth
 #   FEATURE_DIR:        specs/003-user-auth
+#
+# When the current branch is not a valid feature branch (or no branch can be
+# read, e.g. detached HEAD), the script exits with code 3 and -Json output
+# contains {"ACTION": "ASK_USER_FOR_FEATURE_NAME", ...}. The caller can then
+# re-run with -FeatureName <name> to set the feature name explicitly.
+# A bare kebab name (e.g. "user-auth") is auto-numbered by scanning specs/
+# for the next sequential number (e.g. "001-user-auth").
 
 [CmdletBinding()]
 param(
@@ -20,13 +27,15 @@ param(
 
     [switch]$DryRun,
 
+    [string]$FeatureName = '',
+
     [switch]$Help
 )
 
 $ErrorActionPreference = 'Stop'
 
 if ($Help) {
-    Write-Host "Usage: ./create-new-feature.ps1 [-Json] [-DryRun] [-AllowExistingFeature]"
+    Write-Host "Usage: ./create-new-feature.ps1 [-Json] [-DryRun] [-AllowExistingFeature] [-FeatureName <name>]"
     Write-Host ""
     Write-Host "Purpose:"
     Write-Host "  Read the current Git branch name and create the matching Spec Kit feature directory."
@@ -43,7 +52,17 @@ if ($Help) {
     Write-Host "  -Json                  Output machine-readable JSON"
     Write-Host "  -DryRun                Compute names/paths without creating files"
     Write-Host "  -AllowExistingFeature  Reuse an existing feature directory"
+    Write-Host "  -FeatureName <name>    Set the feature name explicitly (overrides the branch)."
+    Write-Host "                         Accepts '003-user-auth', 'YYYYMMDD-HHMMSS-user-auth',"
+    Write-Host "                         or a bare kebab name such as 'user-auth' (auto-numbered"
+    Write-Host "                         by scanning specs/ for the next sequential number)"
     Write-Host "  -Help                  Show this help message"
+    Write-Host ""
+    Write-Host "Exit codes:"
+    Write-Host "  0  success"
+    Write-Host "  1  hard error (bad options, invalid -FeatureName, template failure)"
+    Write-Host "  3  feature name required: re-run with -FeatureName <name>; -Json output"
+    Write-Host '     contains {"ACTION": "ASK_USER_FOR_FEATURE_NAME", ...}'
     exit 0
 }
 
@@ -68,46 +87,130 @@ $branchExitCode = $LASTEXITCODE
 $currentBranch = [string]($branchOutput | Select-Object -First 1)
 $currentBranch = $currentBranch.Trim()
 
-if ($branchExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($currentBranch)) {
-    Write-Error "Spec Kit could not determine the current Git branch. Checkout a feature branch first."
-    exit 1
-}
-
-# Keep branch name and feature directory basename identical.
-# Branch names containing '/' or '\' are rejected instead of rewritten.
-if ($currentBranch -match '[/\\]') {
-    Write-Error "Current Git branch '$currentBranch' contains a path separator. Spec Kit requires a single feature name such as '003-user-auth' so the branch name and feature directory basename remain identical."
-    exit 1
-}
-
-# Spec Kit feature branches must carry their feature identifier.
+# Spec Kit feature names must carry their feature identifier.
 #
 # Supported:
 #   sequential: NNN-short-name
 #   timestamp:  YYYYMMDD-HHMMSS-short-name
 #
 # The suffix must be kebab-like: words separated by single hyphens.
-$numberingMode = $null
-$featureNum = $null
 $namePartPattern = '[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*'
 
-if ($currentBranch -match "^(\d{8}-\d{6})-($namePartPattern)$") {
-    $numberingMode = 'timestamp'
-    $featureNum = $matches[1]
-}
-elseif ($currentBranch -match "^(\d{3,})-($namePartPattern)$") {
-    $numberingMode = 'sequential'
-    $featureNum = $matches[1]
-}
-else {
-    Write-Error "Current Git branch '$currentBranch' is not a Spec Kit feature branch. Expected '003-user-auth' or 'YYYYMMDD-HHMMSS-user-auth'."
-    exit 1
+# Exit-3 path: a recoverable failure solved by -FeatureName.
+function Ask-UserForFeatureNameRequired {
+    param(
+        [string]$Message,
+        [string]$BranchName
+    )
+    [Console]::Error.WriteLine($Message)
+    if ($Json) {
+        $askPayload = [ordered]@{
+            ACTION     = 'ASK_USER_FOR_FEATURE_NAME'
+            ERROR      = $Message
+            BRANCH_NAME = $BranchName
+        }
+        [PSCustomObject]$askPayload | ConvertTo-Json -Compress
+    }
+    exit 3
 }
 
-$featureName = $currentBranch
-$branchName = $currentBranch
+# Global maximum NNN- prefix in specs/ plus one (timestamp dirs excluded).
+function Get-NextFeatureNumber {
+    param([string]$SpecsDir)
+
+    $maxNum = 0
+    if (Test-Path -LiteralPath $SpecsDir -PathType Container) {
+        foreach ($entry in (Get-ChildItem -LiteralPath $SpecsDir -Directory)) {
+            if ($entry.Name -match '^[0-9]{8}-[0-9]{6}-') {
+                # Timestamp-shaped names carry no sequential number.
+                continue
+            }
+            if ($entry.Name -match '^([0-9]{3,})-') {
+                $parsed = [long]::Parse(
+                    $Matches[1],
+                    [System.Globalization.CultureInfo]::InvariantCulture
+                )
+                if ($parsed -gt $maxNum) {
+                    $maxNum = $parsed
+                }
+            }
+        }
+    }
+    return $maxNum + 1
+}
 
 $specsDir = Join-Path $repoRoot 'specs'
+$explicitName = ''
+if ($null -ne $FeatureName) {
+    $explicitName = $FeatureName.Trim()
+}
+
+$numberingMode = $null
+$featureNum = $null
+
+if ($explicitName -ne '') {
+    # Explicit -FeatureName overrides the branch-derived name.
+    if ($explicitName -match '[/\\]') {
+        Write-Error "Feature name '$explicitName' contains a path separator. Provide a single name such as '003-user-auth' or a bare kebab name such as 'user-auth'."
+        exit 1
+    }
+
+    if ($explicitName -match "^(\d{8}-\d{6})-($namePartPattern)$") {
+        $numberingMode = 'timestamp'
+        $featureNum = $Matches[1]
+        $featureName = $explicitName
+    }
+    elseif ($explicitName -match "^(\d{3,})-($namePartPattern)$") {
+        $numberingMode = 'sequential'
+        $featureNum = $Matches[1]
+        $featureName = $explicitName
+    }
+    elseif ($explicitName -match "^($namePartPattern)$") {
+        $nextNum = Get-NextFeatureNumber -SpecsDir $specsDir
+        $featureNum = $nextNum.ToString('D3')
+        $featureName = "$featureNum-$explicitName"
+        $numberingMode = 'sequential'
+    }
+    else {
+        Write-Error "Feature name '$explicitName' is not a valid Spec Kit feature name. Expected '003-user-auth', 'YYYYMMDD-HHMMSS-user-auth', or a bare kebab name such as 'user-auth'."
+        exit 1
+    }
+
+    $branchName = $currentBranch
+}
+else {
+    if ($branchExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($currentBranch)) {
+        Ask-UserForFeatureNameRequired `
+            -Message 'Spec Kit could not determine the current Git branch. Checkout a feature branch first, or re-run with --feature-name <name>.' `
+            -BranchName ''
+    }
+
+    # Keep branch name and feature directory basename identical.
+    # Branch names containing '/' or '\' are rejected instead of rewritten.
+    if ($currentBranch -match '[/\\]') {
+        Ask-UserForFeatureNameRequired `
+            -Message "Current Git branch '$currentBranch' contains a path separator. Spec Kit requires a single feature name such as '003-user-auth' so the branch name and feature directory basename remain identical. Re-run with --feature-name <name> to set the feature name explicitly." `
+            -BranchName $currentBranch
+    }
+
+    if ($currentBranch -match "^(\d{8}-\d{6})-($namePartPattern)$") {
+        $numberingMode = 'timestamp'
+        $featureNum = $matches[1]
+    }
+    elseif ($currentBranch -match "^(\d{3,})-($namePartPattern)$") {
+        $numberingMode = 'sequential'
+        $featureNum = $matches[1]
+    }
+    else {
+        Ask-UserForFeatureNameRequired `
+            -Message "Current Git branch '$currentBranch' is not a Spec Kit feature branch. Expected '003-user-auth' or 'YYYYMMDD-HHMMSS-user-auth'. Re-run with --feature-name <name> to set the feature name explicitly." `
+            -BranchName $currentBranch
+    }
+
+    $featureName = $currentBranch
+    $branchName = $currentBranch
+}
+
 $featureDir = Join-Path $specsDir $featureName
 $specFile = Join-Path $featureDir 'spec.md'
 

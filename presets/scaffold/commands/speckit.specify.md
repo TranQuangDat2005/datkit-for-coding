@@ -19,6 +19,11 @@ Given the feature description above:
    `003-user-auth` first):
    - `{SCRIPT}`
    - The JSON output contains FEATURE_NAME, FEATURE_DIR and SPEC_FILE paths.
+   - If the script exits with code 3 and outputs
+     `"ACTION": "ASK_USER_FOR_FEATURE_NAME"`, ask the user for a feature name
+     (`003-user-auth`, `20260923-134500-user-auth`, or a bare kebab name such
+     as `user-auth` which gets auto-numbered), then re-run with
+     `--feature-name <name>` (`-FeatureName <name>` in PowerShell).
 
 2. **Read the spec-template** to see the sections you need to fill.
 
