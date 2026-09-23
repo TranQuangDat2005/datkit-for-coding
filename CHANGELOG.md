@@ -2,6 +2,15 @@
 
 <!-- insert new changelog below this comment -->
 
+## [1.0.2] - 2026-09-24
+
+### Changed
+
+- feat(templates): strip AI guidance comments from final artifacts
+- feat(templates): report extensions.yml parse errors instead of skipping silently
+- docs: add Spec Kit attribution for MIT (LICENSE, NOTICE, README, CITATION.cff, .zenodo.json)
+- fix: restore MIT license detection in LICENSE
+
 ## [1.0.1] - 2026-08-21
 
 ### Changed

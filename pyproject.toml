@@ -1,6 +1,6 @@
 [project]
 name = "spec-datkit"
-version = "1.0.1"
+version = "1.0.2"
 description = "Specify CLI of Dat Kit (spec-datkit), a rebuild based on the original GitHub Spec Kit (MIT License). A tool to bootstrap your projects for Spec-Driven Development (SDD)."
 readme = "README.md"
 requires-python = ">=3.11"
