@@ -122,7 +122,7 @@ Nếu `.specify/extensions.yml` tồn tại, kiểm tra `hooks.before_checklist`
 - Hook không có condition hoặc condition rỗng:
   - optional hook → surface command/prompt;
   - mandatory hook → emit `EXECUTE_COMMAND:` và thực sự invoke trước khi tiếp tục.
-- Invalid YAML → skip silently.
+- Invalid YAML → KHÔNG skip im lặng: báo cho user rằng `.specify/extensions.yml` không đọc được (kèm parser error), không hook nào được check (kể cả các hook mandatory `optional: false` đã đăng ký), sau đó tiếp tục bình thường.
 - Không có hook → tiếp tục bình thường.
 
 ## Execution Steps
@@ -364,6 +364,7 @@ Generated file phải:
 
 - thay toàn bộ placeholder;
 - bỏ sample/instruction text không còn cần;
+- xóa các khối HTML comment (`<!-- ... -->`) chỉ dùng để hướng dẫn AI điền template — checklist cuối dành cho reviewer (con người);
 - giữ marker definitions đủ để reviewer hiểu;
 - giữ mọi item mới `[ ]`;
 - không sửa built-in `requirements.md`.
@@ -392,7 +393,7 @@ Rules giống pre-hook:
 - không evaluate non-empty condition;
 - mandatory executable hook → emit `EXECUTE_COMMAND:` và run;
 - optional hook → surface command/prompt;
-- invalid YAML → skip silently.
+- invalid YAML → KHÔNG skip im lặng: báo cho user rằng `.specify/extensions.yml` không đọc được (kèm parser error), không hook nào được check (kể cả các hook mandatory `optional: false` đã đăng ký), sau đó tiếp tục bình thường.
 
 ## Done When
 

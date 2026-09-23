@@ -29,7 +29,7 @@ Không tự động thực thi toàn bộ feature trong một invocation.
 
 - Check if `.specify/extensions.yml` exists in the project root.
 - If it exists, read entries under `hooks.before_implement`.
-- If YAML is invalid, skip hook checking silently and continue normally.
+- If YAML is invalid, do not skip silently: tell the user that `.specify/extensions.yml` could not be read (include the parser error) and that no hooks were checked, including any mandatory (`optional: false`) hooks registered there, then continue normally.
 - Ignore hooks with `enabled: false`.
 - Hooks without `enabled` are enabled by default.
 - Do not evaluate non-empty `condition` expressions here.
@@ -590,6 +590,7 @@ Chỉ khi tất cả real tasks trong `tasks.md` đã `[x]` / `[X]`:
 
 Check `.specify/extensions.yml` for `hooks.after_implement`.
 
+- If the YAML cannot be parsed or is invalid, do not skip silently: tell the user that `.specify/extensions.yml` could not be read (include the parser error) and that no hooks were checked, including any mandatory (`optional: false`) hooks registered there, then continue.
 - Ignore disabled hooks.
 - Do not evaluate non-empty conditions here.
 - Mandatory executable hooks:

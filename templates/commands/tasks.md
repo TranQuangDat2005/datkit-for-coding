@@ -30,7 +30,7 @@ Bạn **MUST** xem xét user input trước khi tiếp tục nếu input không 
 
 - Check if `.specify/extensions.yml` exists in the project root.
 - If it exists, read it and look for entries under the `hooks.before_tasks` key.
-- If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally.
+- If the YAML cannot be parsed or is invalid, do not skip silently: tell the user that `.specify/extensions.yml` could not be read (include the parser error) and that no hooks were checked, including any mandatory (`optional: false`) hooks registered there, then continue normally.
 - Filter out hooks where `enabled` is explicitly `false`. Treat hooks without an `enabled` field as enabled by default.
 - For each remaining hook, do **not** attempt to interpret or evaluate hook `condition` expressions:
   - If the hook has no `condition` field, or it is null/empty, treat the hook as executable.
@@ -226,8 +226,8 @@ Rules:
 - Nếu PLAN có CORE/SHELL classification:
   - preserve classification.
   - Không tự invent CORE/SHELL nếu PLAN không sử dụng.
-- Xóa toàn bộ sample task, placeholder và instructional example khỏi generated `tasks.md`.
-- Generated `tasks.md` chỉ chứa task thật của feature và các summary section cần thiết.
+- Xóa toàn bộ sample task, placeholder, instructional example và các khối HTML comment (`<!-- ... -->`) chỉ dùng để hướng dẫn AI điền template khỏi generated `tasks.md`.
+- Generated `tasks.md` chỉ chứa task thật của feature và các summary section cần thiết; người đọc là con người, không cần guidance comment.
 
 ### 9. Validate Tasks
 
@@ -381,7 +381,7 @@ Check if `.specify/extensions.yml` exists in the project root.
 
 - If it does not exist, or no hooks are registered under `hooks.after_tasks`, skip to the Completion Report.
 - If it exists, read it and look for entries under the `hooks.after_tasks` key.
-- If the YAML cannot be parsed or is invalid, skip hook checking silently and continue to the Completion Report.
+- If the YAML cannot be parsed or is invalid, do not skip silently: tell the user that `.specify/extensions.yml` could not be read (include the parser error) and that no hooks were checked, including any mandatory (`optional: false`) hooks registered there, then continue to the Completion Report.
 - Filter out hooks where `enabled` is explicitly `false`. Treat hooks without an `enabled` field as enabled by default.
 - For each remaining hook, do **not** attempt to interpret or evaluate hook `condition` expressions:
   - If the hook has no `condition` field, or it is null/empty, treat the hook as executable.

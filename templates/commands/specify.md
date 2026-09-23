@@ -67,7 +67,7 @@ Rules:
 - hook không có condition hoặc condition rỗng:
   - optional hook -> surface command/prompt;
   - mandatory hook -> emit `EXECUTE_COMMAND:` và thực sự invoke;
-- invalid YAML -> skip silently.
+- invalid YAML -> KHÔNG skip im lặng: báo cho user rằng `.specify/extensions.yml` không đọc được (kèm parser error), không hook nào được check (kể cả các hook mandatory `optional: false` đã đăng ký), sau đó tiếp tục bình thường.
 
 Một hook có thể chuẩn bị hoặc checkout Git branch nếu project muốn.
 Core `__SPECKIT_COMMAND_SPECIFY__` và script `create-new-feature` **không tự quản lý branch**.
@@ -194,6 +194,7 @@ Follow this execution flow:
    - Fill placeholders in place; never rewrite the template's own instructional text.
    - If a section does not apply, keep the heading and write "N/A" with a one-line reason.
    - Match the template's formatting for status markers, lists, and tables.
+   - Remove HTML comment blocks (`<!-- ... -->`) that only guide how to fill the template (yours or copied from the template). The delivered spec is read by humans; keep only comments that carry real content.
 
 ### 6. Specification Quality Validation
 
@@ -312,7 +313,7 @@ Check `.specify/extensions.yml` for `hooks.after_specify`.
   - wait for completion.
 - Optional hook:
   - surface command/prompt to the user.
-- Invalid YAML -> skip silently.
+- Invalid YAML -> KHÔNG skip im lặng: báo cho user rằng `.specify/extensions.yml` không đọc được (kèm parser error), không hook nào được check (kể cả các hook mandatory `optional: false` đã đăng ký), sau đó tiếp tục sang Completion Report.
 
 ## Completion Report
 

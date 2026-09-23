@@ -24,3 +24,5 @@ Given the feature description above:
 
 3. **Write the specification** to SPEC_FILE, replacing the placeholders in each section
    (Overview, Requirements, Acceptance Criteria) with details from the user's description.
+   Remove HTML comment blocks (`<!-- ... -->`) that only guide how to fill the template —
+   the delivered spec is read by humans.

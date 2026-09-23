@@ -180,7 +180,7 @@ Rules:
 - không evaluate non-empty `condition`;
 - optional hook → surface command/prompt;
 - mandatory hook không có condition → emit `EXECUTE_COMMAND:` và thực sự invoke trước khi tiếp tục;
-- invalid YAML → skip silently.
+- invalid YAML → KHÔNG skip im lặng: báo cho user rằng `.specify/extensions.yml` không đọc được (kèm parser error), không hook nào được check (kể cả các hook mandatory `optional: false` đã đăng ký), sau đó tiếp tục bình thường.
 
 ## Execution
 
@@ -624,7 +624,7 @@ Rules giống pre-hook:
 - do not evaluate non-empty conditions;
 - mandatory executable hook → emit `EXECUTE_COMMAND:` và run;
 - optional hook → surface;
-- invalid YAML → skip silently.
+- invalid YAML → KHÔNG skip im lặng: báo cho user rằng `.specify/extensions.yml` không đọc được (kèm parser error), không hook nào được check (kể cả các hook mandatory `optional: false` đã đăng ký), sau đó tiếp tục sang Completion Report.
 
 ## Completion Report
 
