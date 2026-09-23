@@ -104,7 +104,7 @@ def _locate_bundled_preset(preset_id: str) -> Path | None:
 def get_speckit_version() -> str:
     """Get current spec-kit version."""
     try:
-        return importlib.metadata.version("specify-cli")
+        return importlib.metadata.version("spec-datkit")
     except Exception:
         # Fallback: try reading from pyproject.toml
         try:
