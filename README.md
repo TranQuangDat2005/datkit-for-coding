@@ -65,7 +65,7 @@ uv tool install spec-datkit --from git+https://github.com/TranQuangDat2005/datki
 Try it without a persistent install:
 
 ```bash
-uvx --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git specify init my-project --integration copilot
+uvx --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git specdat init my-project --integration copilot
 ```
 
 Or with pipx:
@@ -74,20 +74,20 @@ Or with pipx:
 pipx install git+https://github.com/TranQuangDat2005/datkit-for-coding.git
 ```
 
-The CLI is installed under both the `specify` and `specdat` commands.
+The CLI is installed under both the `specdat` and `specify` commands — this guide uses `specdat`.
 
 ### 2. Initialize a project
 
 ```bash
-specify init my-project --integration copilot
+specdat init my-project --integration copilot
 cd my-project
 ```
 
 For CI or AI agent harnesses (no keyboard, or a PTY that cannot send arrow keys), pass `--non-interactive` so init never hangs on a picker. Combine with `--force` when initializing into a non-empty directory:
 
 ```bash
-specify init my-project --non-interactive --ignore-agent-tools
-specify init --here --force --non-interactive --integration claude
+specdat init my-project --non-interactive --ignore-agent-tools
+specdat init --here --force --non-interactive --integration claude
 ```
 
 ### 3. Establish project principles
@@ -156,21 +156,21 @@ After running `specify init`, your AI coding agent has access to these slash com
 
 Dat Kit works with 30+ AI coding agents — both CLI tools and IDE-based assistants.
 
-Run `specify integration list` to see all available integrations in your installed version.
+Run `specdat integration list` to see all available integrations in your installed version.
 
 ## 🔧 CLI Reference
 
 ```bash
-specify init my-project --integration <agent>   # bootstrap a project
-specify integration list                        # list available agents
-specify extension search / add / remove         # manage extensions
-specify preset search / add / remove            # manage presets
-specify bundle search / info / install          # manage bundles
-specify check                                   # verify agent prerequisites
-specify self check                              # show installed version
+specdat init my-project --integration <agent>   # bootstrap a project
+specdat integration list                        # list available agents
+specdat extension search / add / remove         # manage extensions
+specdat preset search / add / remove            # manage presets
+specdat bundle search / info / install          # manage bundles
+specdat check                                   # verify agent prerequisites
+specdat self check                              # show installed version
 ```
 
-The CLI is available as both `specify` and `specdat`.
+The CLI is available as both `specdat` and `specify`.
 
 ## 🧩 Extensions, Presets & Bundles
 
@@ -190,26 +190,26 @@ Dat Kit can be tailored through three complementary systems:
 ### Extensions — add new capabilities
 
 ```bash
-specify extension search
-specify extension add <extension-name>
+specdat extension search
+specdat extension add <extension-name>
 ```
 
 ### Presets — customize existing workflows
 
 ```bash
-specify preset search
-specify preset add <preset-name>
+specdat preset search
+specdat preset add <preset-name>
 ```
 
 ### Bundles — role-based setups in one command
 
 ```bash
-specify bundle search [<query>]
-specify bundle info <bundle-id>
-specify bundle install <bundle-id>
-specify bundle list
-specify bundle update <bundle-id>     # or --all
-specify bundle remove <bundle-id>
+specdat bundle search [<query>]
+specdat bundle info <bundle-id>
+specdat bundle install <bundle-id>
+specdat bundle list
+specdat bundle update <bundle-id>     # or --all
+specdat bundle remove <bundle-id>
 ```
 
 ### When to Use Which
@@ -247,7 +247,7 @@ specify bundle remove <bundle-id>
 
 ## 🔄 Updating Dat Kit
 
-`specify self check` reports the installed version. To update, reinstall from this repository:
+`specdat self check` reports the installed version. To update, reinstall from this repository:
 
 ```bash
 uv tool install --force spec-datkit --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git
