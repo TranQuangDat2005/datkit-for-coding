@@ -264,4 +264,4 @@ This project is licensed under the terms of the MIT open source license. Please 
 
 ## 🙏 Acknowledgements
 
-Dat Kit (`spec-datkit`) is a **rebuild based on the original work** — [**GitHub Spec Kit**](https://github.com/github/spec-kit), a spec-driven development toolkit by GitHub, Inc. (MIT License). The original copyright notice and license terms are retained in the [LICENSE](./LICENSE) file, as required by the MIT License.
+Dat Kit (`spec-datkit`) is a **rebuild based on the original work** — [**GitHub Spec Kit**](https://github.com/github/spec-kit), a spec-driven development toolkit by GitHub, Inc. (MIT License). The original copyright notice and license terms are retained in the [LICENSE](./LICENSE) file, and the attribution statement is provided in the [NOTICE](./NOTICE) file, as required by the MIT License.
