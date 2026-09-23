@@ -1,51 +1,43 @@
 <div align="center">
-    <img src="https://raw.githubusercontent.com/github/spec-kit/main/media/logo_large.webp" alt="Spec Kit Logo" width="200" height="200"/>
-    <h1>🌱 Spec Kit</h1>
+    <img src="./media/datkit-logo.svg" alt="Dat Kit Logo" width="180" height="180"/>
+    <h1>🧰 Dat Kit</h1>
     <h3><em>Define what to build before building it — with any AI coding agent.</em></h3>
 </div>
 
 <p align="center">
-    <strong>An open source toolkit for building high-quality software with any AI coding agent — a ready-to-use spec-driven process (or bring your own), endlessly extensible, community-driven, and built for your whole organization.</strong>
+    <strong>A spec-driven development toolkit for building high-quality software with any AI coding agent — a ready-to-use spec-driven process (or bring your own), endlessly extensible via extensions, presets, and bundles.</strong>
 </p>
 
 <p align="center">
-    <a href="https://github.com/github/spec-kit/releases/latest"><img src="https://img.shields.io/github/v/release/github/spec-kit" alt="Latest Release"/></a>
-    <a href="https://github.com/github/spec-kit/stargazers"><img src="https://img.shields.io/github/stars/github/spec-kit?style=social" alt="GitHub stars"/></a>
-    <a href="https://github.com/github/spec-kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/github/spec-kit" alt="License"/></a>
-    <a href="https://github.github.io/spec-kit/"><img src="https://img.shields.io/badge/docs-GitHub_Pages-blue" alt="Documentation"/></a>
-</p>
-
-<p align="center">
-    <strong>English</strong> ·
-    <a href="./README.zh-CN.md">简体中文</a>
+    <a href="https://github.com/TranQuangDat2005/datkit-for-coding/stargazers"><img src="https://img.shields.io/github/stars/TranQuangDat2005/datkit-for-coding?style=social" alt="GitHub stars"/></a>
+    <a href="https://github.com/TranQuangDat2005/datkit-for-coding/blob/main/LICENSE"><img src="https://img.shields.io/github/license/TranQuangDat2005/datkit-for-coding" alt="License"/></a>
+    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+"/></a>
+    <a href="https://github.com/github/spec-kit"><img src="https://img.shields.io/badge/fork%20of-Spec%20Kit-2ea043" alt="Fork of Spec Kit"/></a>
 </p>
 
 > [!NOTE]
-> **One year of Spec Kit — and 1.0.0**
+> **About Dat Kit**
 >
-> One year after the first commit, Spec Kit has reached [1.0.0](https://github.com/github/spec-kit/releases/tag/v1.0.0) — not because the work is finished or its shape is frozen, but because the project has grown into something coherent, useful, and shaped by far more people than those who started it.
+> Dat Kit is an independent distribution based on [GitHub Spec Kit](https://github.com/github/spec-kit) (MIT). It keeps the full spec-driven workflow — commands, templates, extensions, presets, bundles — under its own name and version line, installed from this repository.
 >
-> The lead maintainer's personal anniversary post, [*Spec Kit Turns One — and Ships 1.0.0*](https://www.manorrock.com/blog/2026/08/21/spec_kit_turns_one.html), defines what 1.0.0 actually means for the project: **it is now just a number**. As agents make adapting to change dramatically cheaper, the value moves from stability to adaptability.
->
-> To everyone who has used Spec Kit, challenged its assumptions, reported a problem, contributed code or documentation, created an extension or preset, shared an idea, or helped someone else get started: **thank you**. This milestone belongs to the community that carried the project through its first year and continues to shape where it goes next.
+> Differences from upstream: the package is named `spec-datkit`, releases are cut from this repo, and the built-in `specify self upgrade` path is disabled (upgrading would pull the original upstream package). To update, reinstall from this repository — see [Get Started](#-get-started).
 
 ---
 
 ## Table of Contents
 
 - [🤔 What is Spec-Driven Development?](#-what-is-spec-driven-development)
-- [🐞 Bug Fixing with Spec Kit](#-bug-fixing-with-spec-kit)
-- [💡 Assessing Ideas with Spec Kit](#-assessing-ideas-with-spec-kit)
+- [🐞 Bug Fixing with Dat Kit](#-bug-fixing-with-dat-kit)
+- [💡 Assessing Ideas with Dat Kit](#-assessing-ideas-with-dat-kit)
 - [⚡ Get Started](#-get-started)
-- [📽️ Video Overview](#️-video-overview)
 - [🌍 Community](#-community)
 - [🤖 Supported AI Coding Agent Integrations](#-supported-ai-coding-agent-integrations)
-- [🔧 Specify CLI Reference](#-specify-cli-reference)
-- [🧩 Making Spec Kit Your Own: Extensions & Presets](#-making-spec-kit-your-own-extensions--presets)
+- [Available Slash Commands](#available-slash-commands)
+- [🔧 Dat Kit CLI Reference](#-dat-kit-cli-reference)
+- [🧩 Making Dat Kit Your Own: Extensions & Presets](#-making-dat-kit-your-own-extensions--presets)
 - [📦 Bundles: Role-Based Setups](#-bundles-role-based-setups)
 - [📚 Core Philosophy](#-core-philosophy)
 - [🌟 Development Phases](#-development-phases)
-- [🎯 Experimental Goals](#-experimental-goals)
 - [🔧 Prerequisites](#-prerequisites)
 - [📖 Learn More](#-learn-more)
 - [💬 Support](#-support)
@@ -54,94 +46,81 @@
 
 ## 🤔 What is Spec-Driven Development?
 
-Spec-Driven Development **flips the script** on traditional software development. For decades, code has been king — specifications were just scaffolding we built and discarded once the "real work" of coding began. Spec-Driven Development changes this: **specifications become executable**, directly generating working implementations rather than just guiding them.
+Spec-Driven Development (SDD) is a methodology where **specifications guide AI coding agents** through a structured development process. Instead of prompting an AI to write code immediately, you first build clear, structured requirements — then let the agent work through them step by step.
+
+Dat Kit gives you the complete scaffolding for this workflow: templates, slash commands, and scripts that work with your favorite AI coding agent.
 
 ### SDD Quickstart
 
-Replace `vX.Y.Z` with the [latest release tag](https://github.com/github/spec-kit/releases), keeping the leading `v`.
-
 ```bash
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@vX.Y.Z
+# Install Dat Kit (requires uv: https://docs.astral.sh/uv/)
+uv tool install spec-datkit --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git
+
+# Bootstrap a project for Spec-Driven Development
 specify init my-project --integration copilot
 cd my-project
+
+# Create your project's principles, then work through the spec workflow
+/speckit.constitution Create principles focused on code quality and testing standards
+/speckit.specify Build a photo organizer app with drag-and-drop albums
+/speckit.plan Use Vite with vanilla HTML, CSS, and JavaScript; store metadata in SQLite
+/speckit.tasks
+/speckit.implement
 ```
 
-Launch your coding agent in the project directory, then:
+## 🐞 Bug Fixing with Dat Kit
 
-0. **Establish** your project principles once (`/speckit-constitution`). This is a one-time step per project.
-1. **Specify** what you want to build (`/speckit-specify`).
-2. **Plan** how you will build it (`/speckit-plan`).
-3. **Break down** the plan into actionable tasks (`/speckit-tasks`).
-4. **Implement** the tasks (`/speckit-implement`).
-5. **Converge** the implementation against the spec, plan, and tasks (`/speckit-converge`).
-
-> [!NOTE]
-> Repeat steps 4 and 5 until `/speckit-converge` reports **Converged**.
-
-## 🐞 Bug Fixing with Spec Kit
-
-Bug fixes are risky when an agent jumps straight from a report to a patch without validating the diagnosis or confirming that the fix resolves the original symptom. The bundled, opt-in bug extension provides a repeatable **assess → fix → test** workflow that keeps each fix scoped, evidence-based, and documented from root cause through verification.
+Dat Kit includes a structured bug-fixing workflow (via the `bug` extension) that mirrors the SDD process: reproduce and assess the bug, write a failing test, then fix it.
 
 ### Bug Fix Quickstart
 
-Replace `vX.Y.Z` with the [latest release tag](https://github.com/github/spec-kit/releases), keeping the leading `v`.
-
 ```bash
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@vX.Y.Z
+uv tool install spec-datkit --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git
 specify init my-project --integration copilot
 cd my-project
 specify extension add bug
 ```
 
-Launch your coding agent in the project directory, then:
+Then use `/speckit.bug.assess`, `/speckit.bug.fix`, and `/speckit.bug.test` in your agent.
 
-1. **Assess** the bug (`/speckit-bug-assess "<bug report>" slug=login-crash`).
-2. **Fix** the assessed cause (`/speckit-bug-fix slug=login-crash`).
-3. **Test** the fix (`/speckit-bug-test slug=login-crash`).
+## 💡 Assessing Ideas with Dat Kit
 
-## 💡 Assessing Ideas with Spec Kit
-
-Good ideas deserve evidence before commitment, whether or not they become software. The bundled, opt-in assess extension turns a raw idea into a documented **go / needs-clarification / kill** decision through an independent **intake → research → define → shape → decide** workflow.
+Before committing to a feature, run it through the structured assessment workflow (via the `assess` extension): intake, research, shaping, and a clear go/no-go decision.
 
 ### Idea Assessment Quickstart
 
-Replace `vX.Y.Z` with the [latest release tag](https://github.com/github/spec-kit/releases), keeping the leading `v`.
-
 ```bash
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@vX.Y.Z
+uv tool install spec-datkit --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git
 specify init my-project --integration copilot
 cd my-project
 specify extension add assess
 ```
 
-Launch your coding agent in the project directory, then:
-
-1. **Intake** the idea (`/speckit-assess-intake "<idea>" slug=offline-mode`).
-2. **Research** supporting and opposing evidence (`/speckit-assess-research slug=offline-mode`).
-3. **Define** the problem, goals, and success metrics (`/speckit-assess-define slug=offline-mode`).
-4. **Shape** possible solutions and their trade-offs (`/speckit-assess-shape slug=offline-mode`).
-5. **Decide** whether to proceed, clarify, or stop (`/speckit-assess-decide slug=offline-mode`).
-
-> [!NOTE]
-> Idea assessment is standalone. If you choose to build an idea with a **go** decision, you can hand it off to `/speckit-specify`.
+Then use `/speckit.assess.intake` → `/speckit.assess.research` → `/speckit.assess.shape` → `/speckit.assess.decide`.
 
 ## ⚡ Get Started
 
-### 1. Install Specify CLI
+### 1. Install the Dat Kit CLI
 
-Requires **[uv](https://docs.astral.sh/uv/)** ([install uv](./docs/install/uv.md)). Replace `vX.Y.Z` with the latest release tag from [Releases](https://github.com/github/spec-kit/releases) — keep the leading `v` (for example, `v0.12.11`, not `0.12.11`):
-
-```bash
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@vX.Y.Z
-```
-
-Prefer installing from PyPI? The `specify-cli` package is also published there:
+Requires **[uv](https://docs.astral.sh/uv/)** ([install uv](./docs/install/uv.md)) and Python 3.11+:
 
 ```bash
-uv tool install specify-cli
+uv tool install spec-datkit --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git
 ```
 
-See the [Installation Guide](./docs/installation.md) for alternative methods, verification, upgrade, and troubleshooting.
+Try it without a persistent install:
+
+```bash
+uvx --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git specify init my-project --integration copilot
+```
+
+Or with pipx:
+
+```bash
+pipx install git+https://github.com/TranQuangDat2005/datkit-for-coding.git
+```
+
+This installs the CLI under both the `specify` and `specdat` commands.
 
 ### 2. Initialize a project
 
@@ -157,27 +136,9 @@ specify init my-project --non-interactive --ignore-agent-tools
 specify init --here --force --non-interactive --integration claude
 ```
 
-To check for updates or upgrade the installed CLI, use the self-management commands. See the [Upgrade Guide](./docs/upgrade.md) for detailed scenarios and customization options.
-
-```bash
-# Check whether a newer release is available (read-only — does not modify anything)
-specify self check
-
-# Preview what would run, without actually upgrading
-specify self upgrade --dry-run
-
-# Upgrade in place to the latest stable release (auto-detects uv tool vs pipx install)
-specify self upgrade
-
-# Or pin a specific release tag (replace vX.Y.Z[suffix] with your desired release tag)
-specify self upgrade --tag vX.Y.Z[suffix]
-```
-
-Bare `specify self upgrade` executes immediately, matching the no-prompt behavior of commands like `pip install -U` and `npm update`. For `uv tool` installs, it runs `uv tool install specify-cli --force --from <git ref>` under the hood so pinned release tags work, including dev, alpha/beta/rc, or build metadata suffixes. `uvx` (ephemeral) runs and source checkouts are detected and produce path-specific guidance instead of running an installer. Set `SPECIFY_UPGRADE_TIMEOUT_SECS` to cap how long the installer subprocess may run (default: no timeout — interrupt with `Ctrl+C` if needed).
-
 ### 3. Establish project principles
 
-Launch your coding agent in the project directory. Most agents expose spec-kit as `/speckit.*` slash commands; Codex CLI and Command Code in skills mode use `$speckit-*` instead; GitHub Copilot CLI uses `/agents` to select the agent or address it directly in a prompt.
+Launch your coding agent in the project directory. Most agents expose Dat Kit as `/speckit.*` slash commands; Codex CLI and Command Code in skills mode use `$speckit-*` instead; GitHub Copilot CLI uses `/agents` to select the agent or address it directly in a prompt.
 
 Use the **`/speckit.constitution`** command to create your project's governing principles and development guidelines that will guide all subsequent development.
 
@@ -217,32 +178,33 @@ Use **`/speckit.implement`** to execute all tasks and build your feature accordi
 /speckit.implement
 ```
 
-For detailed step-by-step instructions, see our [comprehensive guide](./spec-driven.md).
+For detailed step-by-step instructions, see the [comprehensive guide](./spec-driven.md).
 
-## 📽️ Video Overview
+### Updating Dat Kit
 
-Want to see Spec Kit in action? Watch our [video overview](https://www.youtube.com/watch?v=a9eR1xsfvHg&pp=0gcJCckJAYcqIYzv)!
+`specify self check` reports the installed version (update checks against upstream GitHub releases are disabled in this build; `specify self upgrade` intentionally does nothing and exits with an error). To update, reinstall from this repository:
 
-[![Spec Kit video header](https://raw.githubusercontent.com/github/spec-kit/main/media/spec-kit-video-header.jpg)](https://www.youtube.com/watch?v=a9eR1xsfvHg&pp=0gcJCckJAYcqIYzv)
+```bash
+uv tool install --force spec-datkit --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git
+```
 
 ## 🌍 Community
 
-Explore community-contributed resources on the [Spec Kit docs site](https://github.github.io/spec-kit/):
+Dat Kit resolves extension, preset, workflow, and bundle catalogs from the upstream [Spec Kit community](https://github.github.io/spec-kit/):
 
 - [Extensions](https://github.github.io/spec-kit/community/extensions.html) — commands, hooks, and capabilities
 - [Presets](https://github.github.io/spec-kit/community/presets.html) — template and terminology overrides
 - [Bundles](https://github.github.io/spec-kit/community/bundles.html) — role and team stacks composed from existing components
 - [Walkthroughs](https://github.github.io/spec-kit/community/walkthroughs.html) — end-to-end SDD scenarios
-- [Friends](https://github.github.io/spec-kit/community/friends.html) — projects that extend or build on Spec Kit
 
 > [!NOTE]
 > Community contributions are independently created and maintained by their respective authors. Review source code before installation and use at your own discretion.
 
-Want to contribute? See the [Extension Publishing Guide](extensions/EXTENSION-PUBLISHING-GUIDE.md), the [Presets Publishing Guide](presets/PUBLISHING.md), or the [Community Bundles guide](docs/community/bundles.md).
+For authoring your own components, see the [Extension Publishing Guide](extensions/EXTENSION-PUBLISHING-GUIDE.md), the [Presets Publishing Guide](presets/PUBLISHING.md), or the [Community Bundles guide](docs/community/bundles.md).
 
 ## 🤖 Supported AI Coding Agent Integrations
 
-Spec Kit works with 30+ AI coding agents — both CLI tools and IDE-based assistants. See the full list with notes and usage details in the [Supported AI Coding Agent Integrations](https://github.github.io/spec-kit/reference/integrations.html) guide.
+Dat Kit works with 30+ AI coding agents — both CLI tools and IDE-based assistants. See the full list with notes and usage details in the upstream [Supported AI Coding Agent Integrations](https://github.github.io/spec-kit/reference/integrations.html) guide.
 
 Run `specify integration list` to see all available integrations in your installed version.
 
@@ -270,34 +232,43 @@ Additional commands for enhanced quality and validation:
 
 | Command              | Agent Skill            | Description                                                                                                                          |
 | -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `/speckit.clarify`   | `speckit-clarify`      | Clarify underspecified areas (recommended before `/speckit.plan`; formerly `/quizme`)                                                |
+| `/speckit.clarify`   | `speckit-clarify`      | Clarify underspecified areas (recommended before `/speckit.plan`)                                                |
 | `/speckit.analyze`   | `speckit-analyze`      | Cross-artifact consistency & coverage analysis (run after `/speckit.tasks`, before `/speckit.implement`)                             |
 | `/speckit.checklist` | `speckit-checklist`    | Generate custom quality checklists that validate requirements completeness, clarity, and consistency (like "unit tests for English") |
 
-## 🔧 Specify CLI Reference
+## 🔧 Dat Kit CLI Reference
 
-For full command details, options, and examples, see the [CLI Reference](https://github.github.io/spec-kit/reference/overview.html).
+The CLI is available as both `specify` and `specdat`. For full command details, options, and examples, see the upstream [CLI Reference](https://github.github.io/spec-kit/reference/overview.html) — the command surface is identical.
 
-## 🧩 Making Spec Kit Your Own: Extensions & Presets
+```bash
+specify init my-project --integration <agent>   # bootstrap a project
+specify integration list                        # list available agents
+specify extension search / add / remove         # manage extensions
+specify preset search / add / remove            # manage presets
+specify bundle search / info / install          # manage bundles
+specify self check                              # show installed version
+```
 
-Spec Kit can be tailored to your needs through two complementary systems — **extensions** and **presets** — plus project-local overrides for one-off adjustments:
+## 🧩 Making Dat Kit Your Own: Extensions & Presets
 
-| Priority | Component Type                                    | Location                         |
-| -------: | ------------------------------------------------- | -------------------------------- |
-|      ⬆ 1 | Project-Local Overrides                           | `.specify/templates/overrides/`  |
-|        2 | Presets — Customize core & extensions             | `.specify/presets/templates/`    |
-|        3 | Extensions — Add new capabilities                 | `.specify/extensions/templates/` |
-|      ⬇ 4 | Spec Kit Core — Built-in SDD commands & templates | `.specify/templates/`            |
+Dat Kit can be tailored to your needs through two complementary systems — **extensions** and **presets** — plus project-local overrides for one-off adjustments:
 
-- **Templates** are resolved at **runtime** — Spec Kit walks the stack top-down and uses the first match.
+| Priority | Component Type                              | Location                         |
+| -------: | ------------------------------------------- | -------------------------------- |
+|      ⬆ 1 | Project-Local Overrides                     | `.specify/templates/overrides/`  |
+|        2 | Presets — Customize core & extensions       | `.specify/presets/templates/`    |
+|        3 | Extensions — Add new capabilities           | `.specify/extensions/templates/` |
+|      ⬇ 4 | Dat Kit Core — Built-in SDD commands & templates | `.specify/templates/`        |
+
+- **Templates** are resolved at **runtime** — Dat Kit walks the stack top-down and uses the first match.
 - Project-local overrides (`.specify/templates/overrides/`) let you make one-off adjustments for a single project without creating a full preset.
 - **Extension/preset commands** are applied at **install time** — when you run `specify extension add` or `specify preset add`, command files are written into agent directories (e.g., `.claude/commands/`).
 - If multiple presets or extensions provide the same command, the highest-priority version wins. On removal, the next-highest-priority version is restored automatically.
-- If no overrides or customizations exist, Spec Kit uses its core defaults.
+- If no overrides or customizations exist, Dat Kit uses its core defaults.
 
 ### Extensions — Add New Capabilities
 
-Use **extensions** when you need functionality that goes beyond Spec Kit's core. Extensions introduce new commands and templates — for example, adding domain-specific workflows that are not covered by the built-in SDD commands, integrating with external tools, or adding entirely new development phases. They expand *what Spec Kit can do*.
+Use **extensions** when you need functionality that goes beyond the core. Extensions introduce new commands and templates — for example, adding domain-specific workflows, integrating with external tools, or adding entirely new development phases.
 
 ```bash
 # Search available extensions
@@ -307,13 +278,11 @@ specify extension search
 specify extension add <extension-name>
 ```
 
-For example, extensions could add Jira integration, post-implementation code review, V-Model test traceability, or project health diagnostics.
-
-See the [Extensions reference](https://github.github.io/spec-kit/reference/extensions.html) for the full command guide. Browse the [community extensions](https://github.github.io/spec-kit/community/extensions.html) for what's available.
+See the upstream [Extensions reference](https://github.github.io/spec-kit/reference/extensions.html) for the full command guide. Browse the [community extensions](https://github.github.io/spec-kit/community/extensions.html) for what's available.
 
 ### Presets — Customize Existing Workflows
 
-Use **presets** when you want to change *how* Spec Kit works without adding new capabilities. Presets override the templates and commands that ship with the core *and* with installed extensions — for example, enforcing a compliance-oriented spec format, using domain-specific terminology, or applying organizational standards to plans and tasks. They customize the artifacts and instructions that Spec Kit and its extensions produce.
+Use **presets** when you want to change *how* Dat Kit works without adding new capabilities. Presets override the templates and commands that ship with the core *and* with installed extensions — for example, enforcing a compliance-oriented spec format, using domain-specific terminology, or applying organizational standards to plans and tasks.
 
 ```bash
 # Search available presets
@@ -323,21 +292,11 @@ specify preset search
 specify preset add <preset-name>
 ```
 
-For example, presets could restructure spec templates to require regulatory traceability, adapt the workflow to fit the methodology you use (e.g., Agile, Kanban, Waterfall, jobs-to-be-done, or domain-driven design), add mandatory security review gates to plans, enforce test-first task ordering, or localize the entire workflow to a different language. The [pirate-speak demo](https://github.com/mnriem/spec-kit-pirate-speak-preset-demo) shows just how deep the customization can go. Multiple presets can be stacked with priority ordering.
-
-See the [Presets reference](https://github.github.io/spec-kit/reference/presets.html) for the full command guide, including resolution order and priority stacking.
+See the upstream [Presets reference](https://github.github.io/spec-kit/reference/presets.html) for the full command guide, including resolution order and priority stacking.
 
 ## 📦 Bundles: Role-Based Setups
 
-Extensions and presets are individual building blocks. A **bundle** packages a
-curated set of them — extensions, presets, steps, and workflows — into a single,
-versioned, role-oriented setup so a whole team persona (product manager, business
-analyst, security researcher, developer, …) can be provisioned with one command.
-
-A bundle is described by a hand-written `bundle.yml` manifest. It pins each
-component to a version and, optionally, targets a specific integration; a bundle
-with no `integration` is **agnostic** and inherits whatever integration the
-project already uses.
+Extensions and presets are individual building blocks. A **bundle** packages a curated set of them — extensions, presets, steps, and workflows — into a single, versioned, role-oriented setup so a whole team persona (product manager, business analyst, security researcher, developer, …) can be provisioned with one command.
 
 ```bash
 # Discover bundles in the active catalog stack
@@ -355,31 +314,9 @@ specify bundle update <bundle-id>     # or --all
 specify bundle remove <bundle-id>     # removes only this bundle's components
 ```
 
-Bundles resolve from a **priority-ordered catalog stack** (project > user >
-built-in). Each source carries an install policy: `install-allowed` sources can
-be installed from, while `discovery-only` sources are visible in `search`/`info`
-but refuse installation. Manage the stack with `specify bundle catalog list|add|remove`.
+Bundles resolve from a **priority-ordered catalog stack** (project > user > built-in). Four ready-to-read example bundle manifests live under [`examples/bundles/`](examples/bundles/).
 
-Authors validate and package bundles locally. Distribution is hosting the built
-artifact and adding a catalog source; community bundle submissions use the
-[Bundle Submission](https://github.com/github/spec-kit/issues/new?template=bundle_submission.yml)
-issue template so required component catalogs and install evidence can be reviewed:
-
-```bash
-specify bundle validate --path ./my-bundle      # structural + reference checks
-specify bundle build --path ./my-bundle         # produce a versioned .zip artifact
-```
-
-Four ready-to-read example bundle manifests live under
-[`examples/bundles/`](examples/bundles/) (product manager, business analyst,
-security researcher, developer). These are bundle packaging examples, not
-filled generated feature specs; for end-to-end community examples, see the
-[community walkthroughs](https://github.github.io/spec-kit/community/walkthroughs.html).
-
-Key guarantees: `info` shows exactly what `install` adds (transparency);
-installs are idempotent and confined to the project root; `remove` never touches
-components another installed bundle still needs; and all consume/author commands
-work **offline** against local or pinned sources.
+Key guarantees: `info` shows exactly what `install` adds; installs are idempotent and confined to the project root; `remove` never touches components another installed bundle still needs; and all consume/author commands work **offline** against local or pinned sources.
 
 ### When to Use Which
 
@@ -409,37 +346,7 @@ Spec-Driven Development is a structured process that emphasizes:
 | **Creative Exploration**                 | Parallel implementations | <ul><li>Explore diverse solutions</li><li>Support multiple technology stacks & architectures</li><li>Experiment with UX patterns</li></ul>                         |
 | **Iterative Enhancement** ("Brownfield") | Brownfield modernization | <ul><li>Add features iteratively</li><li>Modernize legacy systems</li><li>Adapt processes</li></ul>                                                                |
 
-For existing projects, keep Spec Kit tooling updates separate from feature
-artifact evolution: refresh managed project files when upgrading, and update
-`specs/` artifacts when intended behavior changes. The
-[Evolving Specs guide](./docs/guides/evolving-specs.md) describes the
-recommended brownfield loop.
-
-## 🎯 Experimental Goals
-
-Our research and experimentation focus on:
-
-### Technology independence
-
-- Create applications using diverse technology stacks
-- Validate the hypothesis that Spec-Driven Development is a process not tied to specific technologies, programming languages, or frameworks
-
-### Enterprise constraints
-
-- Demonstrate mission-critical application development
-- Incorporate organizational constraints (cloud providers, tech stacks, engineering practices)
-- Support enterprise design systems and compliance requirements
-
-### User-centric development
-
-- Build applications for different user cohorts and preferences
-- Support various development approaches (from vibe-coding to AI-native development)
-
-### Creative & iterative processes
-
-- Validate the concept of parallel implementation exploration
-- Provide robust iterative feature development workflows
-- Extend processes to handle upgrades and modernization tasks
+For existing projects, keep Dat Kit tooling updates separate from feature artifact evolution: refresh managed project files when upgrading, and update `specs/` artifacts when intended behavior changes. The [Evolving Specs guide](./docs/guides/evolving-specs.md) describes the recommended brownfield loop.
 
 ## 🔧 Prerequisites
 
@@ -449,23 +356,19 @@ Our research and experimentation focus on:
 - [Python 3.11+](https://www.python.org/downloads/)
 - [Git](https://git-scm.com/downloads)
 
-If you encounter issues with an agent, please open an issue so we can refine the integration.
-
 ## 📖 Learn More
 
-- **[Complete Spec-Driven Development Methodology](./spec-driven.md)** - Deep dive into the full process
-- **[Quick Start Guide](https://github.github.io/spec-kit/quickstart.html)** - Step-by-step implementation walkthrough
-
----
+- **[Complete Spec-Driven Development Methodology](./spec-driven.md)** — deep dive into the full process
+- **[Upstream Spec Kit docs](https://github.github.io/spec-kit/)** — reference documentation for the shared machinery (agents, extensions, presets, bundles)
 
 ## 💬 Support
 
-For support, please open a [GitHub issue](https://github.com/github/spec-kit/issues/new). We welcome bug reports, feature requests, and questions about using Spec-Driven Development.
+For support with Dat Kit, please open a [GitHub issue](https://github.com/TranQuangDat2005/datkit-for-coding/issues/new) on this repository. Bug reports, feature requests, and questions about using Spec-Driven Development are all welcome.
 
 ## 🙏 Acknowledgements
 
-This project is heavily influenced by and based on the work and research of [John Lam](https://github.com/jflam).
+Dat Kit is a fork of [GitHub Spec Kit](https://github.com/github/spec-kit) and builds on the work and research of [John Lam](https://github.com/jflam) and the Spec Kit maintainers and community. Upstream bug fixes and features are periodically merged into this repository.
 
 ## 📄 License
 
-This project is licensed under the terms of the MIT open source license. Please refer to the [LICENSE](./LICENSE) file for the full terms.
+This project is licensed under the terms of the MIT open source license, as is the upstream Spec Kit code it contains. Please refer to the [LICENSE](./LICENSE) file for the full terms.
