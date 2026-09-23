@@ -1,12 +1,9 @@
 {
-  "title": "Spec Kit",
-  "description": "Spec Kit is an open source toolkit for Spec-Driven Development (SDD) — a methodology that helps software teams build high-quality software faster by focusing on product scenarios and predictable outcomes. It provides the Specify CLI, slash-command templates, extensions, presets, workflows, and integrations for popular AI coding agents.",
+  "title": "Dat Kit (spec-datkit)",
+  "description": "Dat Kit is an open source toolkit for Spec-Driven Development (SDD), rebuilt based on the original GitHub Spec Kit (MIT License, © GitHub, Inc.). It helps software teams build high-quality software faster by focusing on product scenarios and predictable outcomes. It provides the Specify CLI, slash-command templates, extensions, presets, workflows, and integrations for popular AI coding agents.",
   "creators": [
     {
-      "name": "Delimarsky, Den"
-    },
-    {
-      "name": "Riem, Manfred"
+      "name": "TranQuangDat2005"
     }
   ],
   "license": "MIT",
@@ -22,7 +19,7 @@
   "related_identifiers": [
     {
       "identifier": "https://github.com/github/spec-kit",
-      "relation": "isSupplementTo",
+      "relation": "isDerivedFrom",
       "scheme": "url"
     }
   ]

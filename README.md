@@ -31,6 +31,7 @@
 - [🔄 Updating Dat Kit](#-updating-dat-kit)
 - [💬 Support](#-support)
 - [📄 License](#-license)
+- [🙏 Acknowledgements](#-acknowledgements)
 
 ## ✨ Highlights
 
@@ -260,3 +261,7 @@ Please open a [GitHub issue](https://github.com/TranQuangDat2005/datkit-for-codi
 ## 📄 License
 
 This project is licensed under the terms of the MIT open source license. Please refer to the [LICENSE](./LICENSE) file for the full terms.
+
+## 🙏 Acknowledgements
+
+Dat Kit (`spec-datkit`) is a **rebuild based on the original work** — [**GitHub Spec Kit**](https://github.com/github/spec-kit), a spec-driven development toolkit by GitHub, Inc. (MIT License). The original copyright notice and license terms are retained in the [LICENSE](./LICENSE) file, as required by the MIT License.

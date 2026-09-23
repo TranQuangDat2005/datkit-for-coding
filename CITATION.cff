@@ -1,27 +1,24 @@
 cff-version: 1.2.0
 message: >-
-  If you use Spec Kit in your research or reference it in a paper,
+  If you use Dat Kit in your research or reference it in a paper,
   please cite it using the metadata below.
 type: software
-title: "Spec Kit"
+title: "Dat Kit (spec-datkit)"
 abstract: >-
-  Spec Kit is an open source toolkit for Spec-Driven Development (SDD) —
-  a methodology that helps software teams build high-quality software faster
-  by focusing on product scenarios and predictable outcomes. It provides the
-  Specify CLI, slash-command templates, extensions, presets, workflows, and
+  Dat Kit is an open source toolkit for Spec-Driven Development (SDD),
+  rebuilt based on the original GitHub Spec Kit (MIT License,
+  © GitHub, Inc.).
+  It helps software teams build high-quality software faster by focusing
+  on product scenarios and predictable outcomes. It provides the Specify
+  CLI, slash-command templates, extensions, presets, workflows, and
   integrations for popular AI coding agents.
 authors:
-  - given-names: Den
-    family-names: Delimarsky
-    alias: localden
-  - given-names: Manfred
-    family-names: Riem
-    alias: mnriem
-repository-code: "https://github.com/github/spec-kit"
-url: "https://github.github.io/spec-kit/"
+  - name: TranQuangDat2005
+    alias: TranQuangDat2005
+repository-code: "https://github.com/TranQuangDat2005/datkit-for-coding"
 license: MIT
-version: "0.10.2"
-date-released: "2026-06-11"
+version: "1.0.1"
+date-released: "2026-08-21"
 keywords:
   - spec-driven development
   - ai coding agents
@@ -29,3 +26,8 @@ keywords:
   - cli
   - copilot
   - specification
+related-identifiers:
+  - type: url
+    identifier: "https://github.com/github/spec-kit"
+    relation: isDerivedFrom
+    description: "Dat Kit is a rebuild based on the original GitHub Spec Kit (MIT License)."
