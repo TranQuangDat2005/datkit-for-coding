@@ -20,7 +20,9 @@ Chỉ ghi những quyết định kỹ thuật, thay đổi, ảnh hưởng,
 dependency, ngoại lệ, risk và cấu trúc triển khai
 liên quan trực tiếp đến tính năng này.
 
-KHÔNG tạo `tasks.md` ở giai đoạn này.
+Đầu ra duy nhất của bước lập kế hoạch là `plan.md`.
+KHÔNG tạo `research.md`, `data-model.md`, `contracts/`, `quickstart.md` hay `tasks.md`.
+Ghi các quyết định kỹ thuật và kết quả phân tích trực tiếp trong các mục phù hợp của PLAN.
 Việc chia nhỏ task được thực hiện bởi `__SPECKIT_COMMAND_TASKS__`
 sau khi PLAN được phê duyệt.
 -->
@@ -76,8 +78,8 @@ HOẶC
 ## 3. Constitution Check
 
 <!--
-GATE: Phải đạt trước Phase 0 Research.
-Kiểm tra lại sau Phase 1 Design.
+GATE: Phải đạt trước khi thiết kế phương án triển khai.
+Kiểm tra lại trước khi hoàn tất `plan.md`.
 
 Chỉ liệt kê những rule trong constitution
 thực sự ảnh hưởng đến tính năng này.
@@ -145,8 +147,8 @@ User Request
 → Storage
 → Response
 
-Không lặp lại schema chi tiết trong `data-model.md`
-hoặc API contract đầy đủ trong `/contracts/`.
+Ghi các chi tiết dữ liệu và interface cần thiết để hiểu luồng ngay trong PLAN.
+Không tạo tài liệu data model hoặc contracts riêng.
 -->
 
 `[Đầu vào] → [Xử lý] → [Lưu trữ / Tích hợp] → [Đầu ra]`
@@ -189,11 +191,8 @@ HOẶC
 
 ```text
 specs/[###-feature]/
+├── spec.md              # Đặc tả đầu vào
 ├── plan.md              # File hiện tại (__SPECKIT_COMMAND_PLAN__ output)
-├── research.md          # Phase 0 output
-├── data-model.md        # Phase 1 output
-├── quickstart.md        # Phase 1 output
-├── contracts/           # Phase 1 output nếu có external interface
 └── tasks.md             # Tạo sau bởi __SPECKIT_COMMAND_TASKS__
 ```
 
@@ -243,13 +242,13 @@ Chỉ dùng phần này cho những quyết định không thể xác định an
 - `AGENTS.md`
 - constitution / project constraints
 - repository context
-- Phase 0 Research
+- phân tích và nghiên cứu phục vụ tính năng được ghi trực tiếp trong PLAN
 
 Không tự suy đoán.
 
-Nếu vẫn còn câu hỏi chưa được giải quyết,
-planning CHƯA hoàn tất và workflow phải dừng
-để chờ human input.
+Nếu vẫn còn câu hỏi chưa được giải quyết, ghi rõ tại đây,
+giữ PLAN ở trạng thái DRAFT — REVIEW và báo cáo đang chờ human input.
+Không chuyển sang tạo tasks cho đến khi các quyết định được chốt và PLAN được phê duyệt.
 
 Sau khi được xác nhận:
 - cập nhật PLAN

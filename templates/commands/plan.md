@@ -1,5 +1,5 @@
 ---
-description: Execute the implementation planning workflow using the plan template to generate design artifacts.
+description: Create or update plan.md as the only planning artifact, using the active plan template, feature spec, and project context.
 handoffs:
   - label: Create Tasks
     agent: speckit.tasks
@@ -77,10 +77,12 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Mark only unresolved **feature-specific technical decisions** as "NEEDS CLARIFICATION".
    - Fill Constitution Check section from constitution.
    - Evaluate gates (ERROR if violations unjustified).
-   - Phase 0: Generate research.md to resolve feature-specific NEEDS CLARIFICATION items and evaluate new technical choices.
-   - Phase 1: Generate data-model.md, contracts/, quickstart.md.
-   - Re-evaluate Constitution Check post-design.
-   - Comment cleanup: remove HTML comment blocks (`<!-- ... -->`) that only guide how to fill the template (yours or copied from the template) from every generated artifact. Deliverables are read by humans; keep only comments that carry real content.
+   - Resolve feature-specific technical decisions directly inside `plan.md`. Research only unresolved feature-specific unknowns or new technical choices; record decisions, rationale, and relevant alternatives in the existing template sections.
+   - Record relevant data design, interface details, and validation approach directly in the appropriate `plan.md` sections.
+   - Record remaining decisions requiring human input under Questions for Human. Keep the plan in DRAFT — REVIEW while these remain unresolved; do not invent answers or proceed to task generation.
+   - Do not generate `research.md`, `data-model.md`, `contracts/`, `quickstart.md`, or `tasks.md`. The only planning artifact is `plan.md`; leave existing supplementary artifacts unchanged.
+   - Re-evaluate Constitution Check before completing `plan.md`.
+   - Comment cleanup: remove HTML comment blocks (`<!-- ... -->`) that only guide how to fill the template (yours or copied from the template) from `plan.md`. Deliverables are read by humans; keep only comments that carry real content.
 
 ## Mandatory Post-Execution Hooks
 
@@ -118,59 +120,16 @@ Check if `.specify/extensions.yml` exists in the project root.
 
 ## Completion Report
 
-Command ends after Phase 1 design. Report branch, IMPL_PLAN path, and generated artifacts.
+Command ends after `plan.md` is completed.
 
-## Phases
+Report:
 
-### Phase 0: Outline & Research
+- branch
+- IMPL_PLAN path
 
-1. **Extract feature-specific unknowns from Technical Context** above:
-   - For each unresolved NEEDS CLARIFICATION → research task.
-   - For each **new or proposed** dependency → best-practices and compatibility task.
-   - For each **feature-specific** external integration → integration-pattern task.
-   - Do **not** create research tasks for project-wide technology or conventions already fixed by `AGENTS.md`, the constitution, or referenced project constraints unless the feature proposes a deviation.
+If Questions for Human contains unresolved decisions, state that the plan is a draft awaiting human input.
 
-2. **Generate and dispatch research agents**:
-
-   ```text
-   For each unresolved feature-specific unknown:
-     Task: "Research {unknown} for {feature context}"
-   For each new or proposed technology/dependency:
-     Task: "Find best practices and compatibility considerations for {tech} in {domain}"
-   For each feature-specific integration:
-     Task: "Research integration patterns for {integration} in {feature context}"
-   ```
-
-3. **Consolidate findings** in `research.md` using format:
-   - Decision: [what was chosen]
-   - Rationale: [why chosen]
-   - Alternatives considered: [what else evaluated]
-
-**Output**: research.md with all NEEDS CLARIFICATION resolved
-
-### Phase 1: Design & Contracts
-
-**Prerequisites:** `research.md` complete
-
-1. **Extract entities from feature spec** → `data-model.md`:
-   - Entity name, fields, relationships
-   - Validation rules from requirements
-   - State transitions if applicable
-
-2. **Define interface contracts** (if project has external interfaces) → `/contracts/`:
-   - Identify what interfaces the project exposes to users or other systems
-   - Document the contract format appropriate for the project type
-   - Examples: public APIs for libraries, command schemas for CLI tools, endpoints for web services, grammars for parsers, UI contracts for applications
-   - Skip if project is purely internal (build scripts, one-off tools, etc.)
-
-3. **Create quickstart validation guide** → `quickstart.md`:
-   - Document runnable validation scenarios that prove the feature works end-to-end
-   - Include prerequisites, setup commands, test/run commands, and expected outcomes
-   - Use links or references to contracts and data model details instead of duplicating them
-   - Do not include full implementation code, model/service/controller bodies, migrations, or complete test suites
-   - Keep this artifact as a validation/run guide; implementation details belong in `tasks.md` and the implementation phase
-
-**Output**: data-model.md, /contracts/*, quickstart.md
+Do not generate additional planning artifacts.
 
 ## Key rules
 
@@ -178,10 +137,14 @@ Command ends after Phase 1 design. Report branch, IMPL_PLAN path, and generated 
 - Project-wide tech stack and conventions belong to project context (`AGENTS.md`, constitution, and referenced constraints); the plan should record only feature-specific technical decisions, additions, impacts, or deviations.
 - Do not introduce a new framework, library, storage technology, architectural pattern, or external service when the project context already defines an approved approach unless the feature requires it and the plan explicitly justifies the deviation.
 - Do not silently override project-level context. Surface conflicts or missing feature-specific decisions as NEEDS CLARIFICATION.
-- ERROR on gate failures or unresolved clarifications.
+- ERROR on unjustified gate failures. Record unresolved human decisions in Questions for Human and report the plan as awaiting input.
 
 ## Done When
 
-- [ ] Plan workflow executed and design artifacts generated
+- [ ] `plan.md` completed using the active plan template
+- [ ] Constitution checks completed
+- [ ] All resolvable technical decisions recorded in `plan.md`
+- [ ] Remaining human decisions recorded under Questions for Human
+- [ ] No additional planning artifacts generated
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
-- [ ] Completion reported to user with branch, plan path, and generated artifacts
+- [ ] Completion reported with branch and plan path

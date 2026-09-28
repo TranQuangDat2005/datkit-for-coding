@@ -2,6 +2,15 @@
 
 <!-- insert new changelog below this comment -->
 
+## [1.0.3] - 2026-09-28
+
+### Changed
+
+- Make `plan.md` the only planning output; record research findings, technical decisions, data design, interfaces, and validation approach directly in the plan.
+- Remove the Phase 0/1 requirements to generate `research.md`, `data-model.md`, `contracts/`, and `quickstart.md`; task generation remains a separate step.
+- Keep unresolved human decisions under Questions for Human and report the plan as DRAFT — REVIEW until they are resolved.
+- Align the plan template, constitution checks, completion report, and completion criteria with the single-artifact planning workflow.
+
 ## [1.0.2] - 2026-09-24
 
 ### Changed
