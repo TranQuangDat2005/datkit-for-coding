@@ -9,7 +9,7 @@ IMPORTANT:
 Example:
   Current Git branch: 003-user-auth
   FEATURE_NAME:       003-user-auth
-  FEATURE_DIR:        specs/003-user-auth
+  FEATURE_DIR:        <specs-directory>/003-user-auth
 
 When the current branch is not a valid feature branch (or no branch can be
 read, e.g. detached HEAD), the script exits with code 3 and --json output
@@ -34,6 +34,7 @@ try:
         TemplateResolutionError,
         get_repo_root,
         persist_feature_json,
+        resolve_specs_directory,
         resolve_template_content,
     )
 except ImportError:  # pragma: no cover - direct execution from unusual cwd
@@ -42,6 +43,7 @@ except ImportError:  # pragma: no cover - direct execution from unusual cwd
         TemplateResolutionError,
         get_repo_root,
         persist_feature_json,
+        resolve_specs_directory,
         resolve_template_content,
     )
 
@@ -267,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
             feature_num = sequential_match.group(1)
             feature_name = explicit_name
         elif _BARE_NAME_PATTERN.match(explicit_name):
-            specs_dir = repo_root / "specs"
+            specs_dir = repo_root / resolve_specs_directory(repo_root)
             next_num = _next_sequential_number(specs_dir)
             feature_num = f"{next_num:03d}"
             feature_name = f"{feature_num}-{explicit_name}"
@@ -331,7 +333,8 @@ def main(argv: list[str] | None = None) -> int:
         feature_name = current_branch
         branch_name = current_branch
 
-    specs_dir = repo_root / "specs"
+    specs_rel = resolve_specs_directory(repo_root)
+    specs_dir = repo_root / specs_rel
     feature_dir = specs_dir / feature_name
     spec_file = feature_dir / "spec.md"
 
@@ -374,7 +377,7 @@ def main(argv: list[str] | None = None) -> int:
                 spec_file.touch()
 
         # Downstream Spec Kit commands resolve the active feature from feature.json.
-        persist_feature_json(repo_root, f"specs/{feature_name}")
+        persist_feature_json(repo_root, f"{specs_rel}/{feature_name}")
 
         # Convenience values for commands executed in this Python process.
         os.environ["SPECIFY_FEATURE"] = feature_name

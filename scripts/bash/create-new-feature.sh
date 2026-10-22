@@ -9,7 +9,7 @@
 # Example:
 #   Current Git branch: 003-user-auth
 #   FEATURE_NAME:       003-user-auth
-#   FEATURE_DIR:        specs/003-user-auth
+#   FEATURE_DIR:        <specs-directory>/003-user-auth
 #
 # When the current branch is not a valid feature branch (or no branch can be
 # read, e.g. detached HEAD), the script exits with code 3 and --json output
@@ -180,7 +180,32 @@ bare_name_pattern="^($name_part_pattern)$"
 FEATURE_NAME_INPUT="${FEATURE_NAME_INPUT#"${FEATURE_NAME_INPUT%%[![:space:]]*}"}"
 FEATURE_NAME_INPUT="${FEATURE_NAME_INPUT%"${FEATURE_NAME_INPUT##*[![:space:]]}"}"
 
-SPECS_DIR="$REPO_ROOT/specs"
+# Specs directory: single source of truth is specs_directory in
+# .specify/init-options.json (see specify init --specs-dir). Falls back to
+# specs/ for legacy projects or unusable values (absolute, drive-qualified,
+# or containing .. components).
+resolve_specs_directory() {
+    local opts="$REPO_ROOT/.specify/init-options.json"
+    local value=""
+    if [ -f "$opts" ]; then
+        if has_jq; then
+            value=$(jq -r '.specs_directory // empty' "$opts" 2>/dev/null || true)
+        else
+            value=$(sed -n 's/.*"specs_directory"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$opts" | head -n 1)
+        fi
+    fi
+    value=$(printf '%s' "$value" | sed 's:\\:/:g' | sed 's:[[:space:]]::g; s:/\+$::')
+    case "$value" in
+        ""|/*|*..*|*:*)
+            printf 'specs'
+            ;;
+        *)
+            printf '%s' "$value"
+            ;;
+    esac
+}
+
+SPECS_DIR="$REPO_ROOT/$(resolve_specs_directory)"
 
 if [ -n "$FEATURE_NAME_INPUT" ]; then
     # Explicit --feature-name overrides the branch-derived name.

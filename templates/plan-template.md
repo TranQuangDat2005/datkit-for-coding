@@ -2,7 +2,7 @@
 
 **Branch**: `[###-feature-name]` | **Ngày**: [DATE] | **Spec**: [link]  
 **STATUS**: DRAFT — REVIEW  
-**INPUT**: Đặc tả tính năng tại `/specs/[###-feature-name]/spec.md`
+**INPUT**: Đặc tả tính năng tại `spec.md` trong thư mục feature hiện tại (FEATURE_DIR từ script — thư mục specs của dự án được cấu hình tại `specs_directory` trong `.specify/init-options.json`)
 
 <!--
 Tài liệu này mô tả CÁCH tính năng sẽ được triển khai.
@@ -190,7 +190,7 @@ HOẶC
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+<specs-directory>/[###-feature]/
 ├── spec.md              # Đặc tả đầu vào
 ├── plan.md              # File hiện tại (__SPECKIT_COMMAND_PLAN__ output)
 └── tasks.md             # Tạo sau bởi __SPECKIT_COMMAND_TASKS__

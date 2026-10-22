@@ -262,6 +262,16 @@ def register(app: typer.Typer) -> None:
         script_type: str = typer.Option(
             None, "--script", help="Script type to use: sh, ps, or py"
         ),
+        specs_dir: str = typer.Option(
+            None,
+            "--specs-dir",
+            help=(
+                "Project specs directory relative to the project root "
+                "(e.g. backend/specs for a monorepo). Defaults to specs. "
+                "Stored as specs_directory in .specify/init-options.json "
+                "and read by all spec scripts."
+            ),
+        ),
         ignore_agent_tools: bool = typer.Option(
             False,
             "--ignore-agent-tools",
@@ -367,6 +377,7 @@ def register(app: typer.Typer) -> None:
             specify init my-project --non-interactive  # CI/agent: defaults, no prompts
             specify init --here --force --non-interactive --integration claude  # Scripted init, no hang
             specify init my-project --integration claude   # Claude installs skills by default
+            specify init my-project --integration claude --specs-dir backend/specs  # Monorepo: specs inside a subproject
             specify init --here --integration gemini
             specify init my-project --integration generic --integration-options="--commands-dir .myagent/commands/"  # Bring your own agent; requires --commands-dir
             specify init my-project --integration claude --preset healthcare-compliance  # With preset
@@ -392,6 +403,21 @@ def register(app: typer.Typer) -> None:
         )
 
         show_banner()
+
+        if specs_dir:
+            normalized = specs_dir.strip().replace("\\", "/").rstrip("/")
+            if (
+                not normalized
+                or normalized.startswith("/")
+                or ":" in normalized
+                or any(part in ("", ".", "..") for part in normalized.split("/"))
+            ):
+                console.print(
+                    "[red]Error:[/red] --specs-dir must be a repo-relative path "
+                    "without '..' components (e.g. backend/specs)."
+                )
+                raise typer.Exit(1)
+            specs_dir = normalized
 
         from ..integrations import INTEGRATION_REGISTRY, get_integration
 
@@ -809,6 +835,8 @@ def register(app: typer.Typer) -> None:
                     "feature_numbering": "sequential",
                     "speckit_version": get_speckit_version(),
                 }
+                if specs_dir:
+                    init_opts["specs_directory"] = specs_dir
                 if resolved_integration.is_skills_mode(
                     integration_parsed_options or None, project_root=project_path
                 ):

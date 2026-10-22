@@ -119,6 +119,36 @@ def read_feature_json_feature_directory(repo_root: Path) -> str:
     return value if isinstance(value, str) else ""
 
 
+def resolve_specs_directory(repo_root: Path) -> str:
+    """Return the project's specs directory as a repo-relative POSIX path.
+
+    Single source of truth is ``specs_directory`` in
+    ``.specify/init-options.json`` (see ``specify init --specs-dir``).
+    Falls back to ``specs`` when the file is missing, unreadable, or the
+    value is not a safe repo-relative path (absolute, drive-qualified, or
+    containing ``..`` components).
+    """
+    default = "specs"
+    init_options = repo_root / ".specify" / "init-options.json"
+    try:
+        data = json.loads(init_options.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return default
+    value = data.get("specs_directory") if isinstance(data, dict) else None
+    if not isinstance(value, str) or not value.strip():
+        return default
+    value = value.strip().replace("\\", "/").rstrip("/")
+    if (
+        not value
+        or value.startswith("/")
+        or ":" in value
+        or "" in value.split("/")
+        or any(part == ".." for part in value.split("/"))
+    ):
+        return default
+    return value
+
+
 def _json_dump(data: dict[str, str]) -> str:
     return json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
 

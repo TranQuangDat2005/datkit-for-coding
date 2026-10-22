@@ -9,7 +9,7 @@
 # Example:
 #   Current Git branch: 003-user-auth
 #   FEATURE_NAME:       003-user-auth
-#   FEATURE_DIR:        specs/003-user-auth
+#   FEATURE_DIR:        <specs-directory>/003-user-auth
 #
 # When the current branch is not a valid feature branch (or no branch can be
 # read, e.g. detached HEAD), the script exits with code 3 and -Json output
@@ -139,7 +139,27 @@ function Get-NextFeatureNumber {
     return $maxNum + 1
 }
 
-$specsDir = Join-Path $repoRoot 'specs'
+# Specs directory: single source of truth is specs_directory in
+# .specify/init-options.json (see specify init --specs-dir). Falls back to
+# specs/ for legacy projects or unusable values.
+$specsRel = 'specs'
+$initOptionsPath = Join-Path $repoRoot '.specify/init-options.json'
+if (Test-Path -LiteralPath $initOptionsPath) {
+    try {
+        $initOptions = Get-Content -LiteralPath $initOptionsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $configured = $initOptions.specs_directory
+        if ($configured -is [string] -and $configured.Trim()) {
+            $specsRel = ($configured.Trim() -replace '\\', '/').TrimEnd('/')
+        }
+    }
+    catch {
+        # Malformed init-options.json falls back to the default specs/.
+    }
+}
+if ($specsRel -notmatch '^[A-Za-z0-9][A-Za-z0-9_./ -]*$' -or $specsRel -like '*..*') {
+    $specsRel = 'specs'
+}
+$specsDir = Join-Path $repoRoot $specsRel
 $explicitName = ''
 if ($null -ne $FeatureName) {
     $explicitName = $FeatureName.Trim()
@@ -257,7 +277,7 @@ if (-not $DryRun) {
     # and python twins (Join-Path-free, portable in JSON).
     Save-FeatureJson `
         -RepoRoot $repoRoot `
-        -FeatureDirectory "specs/$featureName"
+        -FeatureDirectory "$specsRel/$featureName"
 
     # Convenience values for commands executed in this PowerShell process.
     $env:SPECIFY_FEATURE = $featureName

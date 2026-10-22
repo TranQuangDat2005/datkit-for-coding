@@ -34,8 +34,12 @@ Current Git branch = 003-user-auth
 
 FEATURE_NAME = 003-user-auth
 BRANCH_NAME  = 003-user-auth
-FEATURE_DIR  = specs/003-user-auth
+FEATURE_DIR  = <specs_directory>/003-user-auth
 ```
+
+`<specs_directory>` là thư mục specs của dự án, đọc từ
+`specs_directory` trong `.specify/init-options.json` (mặc định `specs`).
+Luôn dùng giá trị `FEATURE_DIR` mà script trả về, không tự suy ra `specs/`.
 
 Rules:
 
@@ -125,7 +129,7 @@ Nếu script fail:
   1. Hỏi user muốn đặt tên feature là gì.
   2. Chấp nhận: `003-user-auth`, `20260923-134500-user-auth`, hoặc tên kebab
      trần như `user-auth` (script sẽ tự đánh số tiếp theo bằng cách quét
-     `specs/`, ví dụ thành `001-user-auth`).
+     thư mục specs đã cấu hình, ví dụ thành `001-user-auth`).
   3. Chạy lại script với flag tên feature:
      - `{SCRIPT} --feature-name <name>` (bash/python)
      - `{SCRIPT} -FeatureName <name>` (PowerShell)

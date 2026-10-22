@@ -4,7 +4,7 @@ description: "Dependency-ordered task list template for feature implementation"
 
 # Tasks: [FEATURE NAME]
 
-**Input**: Approved design artifacts from `/specs/[###-feature-name]/`
+**Input**: Approved design artifacts trong thư mục feature hiện tại (FEATURE_DIR — thư mục specs của dự án được cấu hình tại `specs_directory` trong `.specify/init-options.json`)
 
 **Required**:
 - `spec.md`
