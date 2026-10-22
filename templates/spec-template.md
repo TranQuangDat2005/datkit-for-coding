@@ -1,4 +1,4 @@
-# Detailed Spec: [FEATURE NAME]
+# Detail Spec: [FEATURE NAME]
 
 **Feature Branch**: `[###-feature-name]`
 
@@ -6,7 +6,7 @@
 
 **Owner**: `[Author Name]`
 
-**Status**: `Draft | Review | Approved | Implemented`
+**Status**: `DRAFT | REVIEW | APPROVE | IMPLEMENTED`
 
 **Created**: `[YYYY-MM-DD]`
 
@@ -280,9 +280,9 @@ or ASCII/grid tables.
 
 Use semantic headings, bullets, numbered lists, and compact
 
-per-item blocks instead. Keep IDs such as FR-001, BR-001,
+per-item blocks instead. Keep IDs such as UC01, BR-001,
 
-VR-001, DR-001, ERR-001, and AC-001 so requirements remain
+VR-001, NFR-001, ERR-001, and AC-001 so requirements remain
 
 easy to reference and test.
 
@@ -394,11 +394,22 @@ Represent each actor as a short heading/bullet block; do not use tables.
 
 <!--
 
-Define the behavior the system must provide.
+Define the behavior the system must provide, grouped by use case.
+
+Organize related requirements under use-case headings such as:
+
+- `### UC01 — [Use Case Name]`
+
+- `### UC02 — [Use Case Name]`
+
+Each use case MAY contain multiple EARS requirements, edge cases,
+validation rules, and authorization conditions. Use additional UC
+sections whenever the feature has distinct flows such as login,
+logout, password recovery, profile viewing, or profile update.
 
 Each important requirement SHOULD:
 
-- have a unique ID;
+- have a unique ID when cross-referencing is useful;
 
 - use EARS when applicable;
 
@@ -414,23 +425,27 @@ Write validation rules as ID-based bullet blocks; do not use tables.
 
 -->
 
-### FR-001 — [Requirement Name]
+### UC01 — [Primary Use Case]
 
-**Type**: `Ubiquitous | Event-driven | State-driven | Optional | Unwanted`
+- `[EARS requirement for this use case]`
 
-`[EARS requirement]`
+- `[EARS requirement for validation, authorization, or an edge case]`
 
-### FR-002 — [Requirement Name]
+### UC02 — [Secondary Use Case]
 
-**Type**: `[EARS type]`
+- `[EARS requirement for this use case]`
 
-`[EARS requirement]`
+- `[EARS requirement for validation, authorization, or an edge case]`
 
-### FR-003 — [Requirement Name]
+### UC03 — [Optional / Error Use Case]
 
-**Type**: `[EARS type]`
+- `[EARS requirement, if this feature has another distinct flow]`
 
-`[EARS requirement]`
+> Use as many UC sections as the feature requires. Do not invent
+> use cases that are not supported by the user input or project context.
+> A small feature may use one UC section; a module-level feature may
+> use several sections such as authentication, logout, recovery, and
+> profile management.
 
 ### Business Rules
 
@@ -492,7 +507,12 @@ Do not create requirements merely to fill the template.
 
 <!--
 Describe only data relevant to this feature.
-Keep this section concise.
+Keep this section concise but complete enough to implement the feature.
+
+For every relevant entity, describe ownership, key fields, references,
+important constraints, and whether the data is persistent or runtime-only.
+Use scalar references and public contracts when the project architecture
+forbids foreign keys or direct cross-module persistence access.
 
 Follow the existing schema and naming conventions.
 Do not invent data that the feature does not require.
@@ -567,7 +587,9 @@ Define when the feature is considered complete.
 
 Acceptance criteria MUST be observable and testable.
 
-Prefer Given / When / Then.
+Prefer Given / When / Then. Use enough criteria to cover every primary
+use case and the important security, authorization, validation, and error
+paths described in the UC sections.
 
 Cover:
 

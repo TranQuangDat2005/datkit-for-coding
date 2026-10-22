@@ -204,6 +204,9 @@ Follow this execution flow:
    - If no clear user flow can be determined: **ERROR**.
 
 5. Generate Functional Requirements.
+   - Organize requirements by use case using headings such as `UC01`, `UC02`, and so on; use one UC section for each distinct flow.
+   - A module-level or security-sensitive feature SHOULD include separate use cases for its primary flow, secondary flows, validation/error flows, and relevant profile or session flows.
+   - Each UC section may contain multiple EARS requirements, authorization rules, validation behavior, concurrency/edge-case behavior, and user-visible outcomes.
    - Every mandatory requirement must be testable.
    - Record reasonable defaults in Assumptions.
 
@@ -212,6 +215,8 @@ Follow this execution flow:
 7. Identify Key Entities when data is involved.
 
 8. Write the completed specification to `SPEC_FILE`.
+   - Use the Detailed Spec format from the active template: metadata header, `Context & Goal`, `Actors`, UC-grouped `Functional Requirements (EARS)`, `Business Rules`, `Validation Rules`, `Non-functional Requirements`, `Data Model`, `Error Handling`, `Acceptance Criteria`, and `Out of Scope`.
+   - Preserve the user's domain terminology and language. Do not replace project-specific names with generic examples, and do not hard-code a sample project name into paths or requirements.
 
    Template compliance (MUST):
 
@@ -241,6 +246,8 @@ After writing the initial spec, validate it against these quality criteria:
       - [ ] Focused on user value and business needs
       - [ ] Written for non-technical stakeholders
       - [ ] All mandatory sections completed
+      - [ ] Functional requirements are grouped into UC sections appropriate to the feature complexity
+      - [ ] Security, authorization, validation, and error behavior are explicit when relevant
 
       ## Template Structure
 
