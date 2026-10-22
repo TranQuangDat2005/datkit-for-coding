@@ -90,7 +90,12 @@ from ._init_options import (
 
 app = typer.Typer(
     name="specify",
-    help="Setup tool for Specify spec-driven development projects",
+    help=(
+        "Dat Kit - spec-driven development toolkit.\n\n"
+        "Update the installed Dat Kit from GitHub:\n"
+        "  uv tool install --force spec-datkit \\\n"
+        "    --from git+https://github.com/TranQuangDat2005/datkit-for-coding.git@v1.0.5"
+    ),
     add_completion=False,
     invoke_without_command=True,
     cls=BannerGroup,
