@@ -119,6 +119,36 @@ def read_feature_json_feature_directory(repo_root: Path) -> str:
     return value if isinstance(value, str) else ""
 
 
+def normalize_specs_directory(value: str) -> str:
+    """Validate and normalize a repo-relative specs directory."""
+    normalized = value.strip().replace("\\", "/").rstrip("/")
+    parts = normalized.split("/")
+    if (
+        not normalized
+        or normalized.startswith("/")
+        or ":" in normalized
+        or any(part in ("", ".", "..") for part in parts)
+    ):
+        raise ValueError("specs_directory must be a non-empty repo-relative path without '..'")
+    return normalized
+
+
+def save_specs_directory(repo_root: Path, value: str) -> str:
+    """Persist a validated specs directory without discarding other options."""
+    normalized = normalize_specs_directory(value)
+    options_path = repo_root / ".specify" / "init-options.json"
+    try:
+        data = json.loads(options_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        data = {}
+    if not isinstance(data, dict):
+        data = {}
+    data["specs_directory"] = normalized
+    options_path.parent.mkdir(parents=True, exist_ok=True)
+    options_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return normalized
+
+
 def resolve_specs_directory(repo_root: Path) -> str:
     """Return the project's specs directory as a repo-relative POSIX path.
 

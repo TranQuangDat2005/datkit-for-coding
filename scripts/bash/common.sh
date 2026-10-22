@@ -72,6 +72,39 @@ get_repo_root() {
     (cd "$script_dir/../../.." && pwd)
 }
 
+# Persist specs_directory while preserving all existing init options.
+save_specs_directory() {
+    local repo_root="$1"
+    local relative_directory="$2"
+    local options_path="$repo_root/.specify/init-options.json"
+    if command -v jq >/dev/null 2>&1; then
+        jq --arg value "$relative_directory" '.specs_directory = $value' "$options_path" > "${options_path}.tmp" && mv "${options_path}.tmp" "$options_path"
+        return $?
+    fi
+    local py=""
+    if command -v python3 >/dev/null 2>&1; then py=python3; elif command -v python >/dev/null 2>&1; then py=python; fi
+    if [[ -n "$py" ]]; then
+        "$py" - "$options_path" "$relative_directory" <<'PY'
+import json, sys
+path, value = sys.argv[1:]
+try:
+    with open(path, encoding="utf-8") as handle:
+        data = json.load(handle)
+except (OSError, json.JSONDecodeError):
+    data = {}
+if not isinstance(data, dict):
+    data = {}
+data["specs_directory"] = value
+with open(path, "w", encoding="utf-8") as handle:
+    json.dump(data, handle, indent=2, ensure_ascii=False)
+    handle.write("\n")
+PY
+        return $?
+    fi
+    echo "Cannot update init-options.json: jq or Python is required." >&2
+    return 1
+}
+
 # Get current feature name from explicit state only.
 # Returns the feature identifier or empty string if none is set.
 # Feature state is set by SPECIFY_FEATURE (from create-new-feature or

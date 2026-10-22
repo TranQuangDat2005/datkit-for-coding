@@ -105,6 +105,72 @@ function Get-RepoRoot {
     return (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "../../..")).Path
 }
 
+# Resolve the repository-relative specs directory configured by the project.
+# Single source of truth is specs_directory in .specify/init-options.json
+# (see specify init --specs-dir). Projects without an explicit setting
+# retain the standard top-level specs/ directory.
+function Get-SpecsRelativeDirectory {
+    param([string]$RepoRoot = (Get-RepoRoot))
+
+    $relativeDirectory = 'specs'
+    $optionsPath = Join-Path $RepoRoot '.specify/init-options.json'
+    if (Test-Path -LiteralPath $optionsPath -PathType Leaf) {
+        try {
+            $options = Get-Content -LiteralPath $optionsPath -Raw | ConvertFrom-Json
+            $configuredProperty = $options.PSObject.Properties['specs_directory']
+            if ($configuredProperty -and -not [string]::IsNullOrWhiteSpace([string]$configuredProperty.Value)) {
+                $relativeDirectory = ([string]$configuredProperty.Value).Trim()
+            }
+        } catch {
+            throw "Invalid init options at ${optionsPath}: $($_.Exception.Message)"
+        }
+    }
+
+    if ([System.IO.Path]::IsPathRooted($relativeDirectory)) {
+        throw "specs_directory must be relative to the repository root: $relativeDirectory"
+    }
+
+    $relativeDirectory = $relativeDirectory.Replace('\\', '/').Trim('/')
+    if ([string]::IsNullOrWhiteSpace($relativeDirectory)) {
+        throw 'specs_directory must not be empty.'
+    }
+
+    $repoFullPath = [System.IO.Path]::GetFullPath($RepoRoot).TrimEnd('/', '\\')
+    $specsFullPath = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $relativeDirectory)).TrimEnd('/', '\\')
+    $pathPrefix = $repoFullPath + [System.IO.Path]::DirectorySeparatorChar
+    if (-not $specsFullPath.StartsWith($pathPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "specs_directory must stay inside the repository root: $relativeDirectory"
+    }
+
+    return $relativeDirectory
+}
+
+function Get-SpecsDirectory {
+    param([string]$RepoRoot = (Get-RepoRoot))
+
+    return (Join-Path $RepoRoot (Get-SpecsRelativeDirectory -RepoRoot $RepoRoot))
+}
+
+function Save-SpecsRelativeDirectory {
+    param(
+        [Parameter(Mandatory = $true)][string]$RepoRoot,
+        [Parameter(Mandatory = $true)][string]$RelativeDirectory
+    )
+
+    $optionsPath = Join-Path $RepoRoot '.specify/init-options.json'
+    try {
+        if (Test-Path -LiteralPath $optionsPath -PathType Leaf) {
+            $options = Get-Content -LiteralPath $optionsPath -Raw | ConvertFrom-Json
+        } else {
+            $options = [PSCustomObject]@{}
+        }
+    } catch {
+        throw "Invalid init options at ${optionsPath}: $($_.Exception.Message)"
+    }
+    $options | Add-Member -NotePropertyName specs_directory -NotePropertyValue $RelativeDirectory -Force
+    $options | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $optionsPath -Encoding UTF8
+}
+
 function Get-CurrentBranch {
     # Return feature name from explicit state only.
     # Feature state is set by SPECIFY_FEATURE (from create-new-feature or

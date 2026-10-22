@@ -15,8 +15,8 @@
 # read, e.g. detached HEAD), the script exits with code 3 and --json output
 # contains {"ACTION": "ASK_USER_FOR_FEATURE_NAME", ...}. The caller can then
 # re-run with --feature-name <name> to set the feature name explicitly.
-# A bare kebab name (e.g. "user-auth") is auto-numbered by scanning specs/
-# for the next sequential number (e.g. "001-user-auth").
+# A bare kebab name (e.g. "user-auth") is auto-numbered by scanning the
+# configured specs directory for the next sequential number (e.g. "001-user-auth").
 
 set -e
 
@@ -71,7 +71,7 @@ while [ $# -gt 0 ]; do
             echo "  --feature-name <name>     Set the feature name explicitly (overrides the branch)."
             echo "                            Accepts '003-user-auth', 'YYYYMMDD-HHMMSS-user-auth',"
             echo "                            or a bare kebab name such as 'user-auth' (auto-numbered"
-            echo "                            by scanning specs/ for the next sequential number)"
+            echo "                            by scanning the configured specs directory)"
             echo "  --help, -h                Show this help message"
             echo ""
             echo "Exit codes:"
@@ -96,21 +96,56 @@ source "$SCRIPT_DIR/common.sh"
 REPO_ROOT=$(get_repo_root) || exit 1
 
 cd "$REPO_ROOT"
+SPECS_DIR="$REPO_ROOT/$(resolve_specs_directory)"
+
+# In monorepo layouts the specs directory may belong to a subproject with
+# its own Git repository, so Git state is read from the project that owns
+# specs_directory.
+if [ -d "$SPECS_DIR" ]; then
+    GIT_WORK_DIR="$SPECS_DIR"
+else
+    GIT_WORK_DIR="$(dirname "$SPECS_DIR")"
+    while [ ! -d "$GIT_WORK_DIR" ] && [ "$GIT_WORK_DIR" != "$REPO_ROOT" ]; do
+        GIT_WORK_DIR="$(dirname "$GIT_WORK_DIR")"
+    done
+fi
 
 # Git is used only to READ repository/branch state.
 inside_git_status=0
-inside_git_output=$(git rev-parse --is-inside-work-tree 2>/dev/null) || inside_git_status=$?
+inside_git_output=$(git -C "$GIT_WORK_DIR" rev-parse --is-inside-work-tree 2>/dev/null) || inside_git_status=$?
 inside_git="${inside_git_output%%$'\n'*}"
 inside_git="${inside_git#"${inside_git%%[![:space:]]*}"}"
 inside_git="${inside_git%"${inside_git##*[![:space:]]}"}"
 
 if [ "$inside_git_status" -ne 0 ] || [ "$inside_git" != "true" ]; then
-    echo "Spec Kit could not read a Git repository. Select/open the project repository first." >&2
-    exit 1
+    if $JSON_MODE; then
+        echo "Spec Kit could not read a Git repository for specs_directory '$SPECS_DIR'. Set a valid path in .specify/init-options.json." >&2
+        exit 1
+    fi
+    echo "No Git repository was found for specs_directory '$SPECS_DIR'." >&2
+    read -r -p "Enter a repository-relative specs directory, or press Enter to cancel: " entered_specs_dir
+    entered_specs_dir="${entered_specs_dir//\\//}"
+    entered_specs_dir="${entered_specs_dir#/}"
+    entered_specs_dir="${entered_specs_dir%/}"
+    if [ -z "$entered_specs_dir" ] || [[ "$entered_specs_dir" == *..* || "$entered_specs_dir" == *:* ]]; then
+        echo "Invalid specs directory; operation cancelled." >&2
+        exit 1
+    fi
+    candidate_specs_dir="$REPO_ROOT/$entered_specs_dir"
+    candidate_git_dir="$candidate_specs_dir"
+    [ -d "$candidate_git_dir" ] || candidate_git_dir="$(dirname "$candidate_specs_dir")"
+    candidate_git=$(git -C "$candidate_git_dir" rev-parse --is-inside-work-tree 2>/dev/null || true)
+    if [ "${candidate_git%%$'\\n'*}" != "true" ]; then
+        echo "No Git repository found for '$entered_specs_dir'; operation cancelled." >&2
+        exit 1
+    fi
+    save_specs_directory "$REPO_ROOT" "$entered_specs_dir" || exit 1
+    SPECS_DIR="$candidate_specs_dir"
+    GIT_WORK_DIR="$candidate_git_dir"
 fi
 
 branch_status=0
-branch_output=$(git branch --show-current 2>/dev/null) || branch_status=$?
+branch_output=$(git -C "$GIT_WORK_DIR" branch --show-current 2>/dev/null) || branch_status=$?
 current_branch="${branch_output%%$'\n'*}"
 current_branch="${current_branch#"${current_branch%%[![:space:]]*}"}"
 current_branch="${current_branch%"${current_branch##*[![:space:]]}"}"
@@ -139,7 +174,7 @@ ask_user_for_feature_name() {
     exit 3
 }
 
-# Global maximum NNN- prefix in specs/ plus one (timestamp dirs excluded).
+# Global maximum NNN- prefix in the configured specs directory plus one (timestamp dirs excluded).
 next_feature_number() {
     local specs_dir="$1"
     local max_num=0 entry base num

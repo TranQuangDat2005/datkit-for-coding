@@ -33,18 +33,22 @@ try:
     from common import (
         TemplateResolutionError,
         get_repo_root,
+        normalize_specs_directory,
         persist_feature_json,
         resolve_specs_directory,
         resolve_template_content,
+        save_specs_directory,
     )
 except ImportError:  # pragma: no cover - direct execution from unusual cwd
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from common import (
         TemplateResolutionError,
         get_repo_root,
+        normalize_specs_directory,
         persist_feature_json,
         resolve_specs_directory,
         resolve_template_content,
+        save_specs_directory,
     )
 
 
@@ -191,6 +195,44 @@ def _get_current_branch(repo_root: Path) -> str:
     return lines[0].strip() if lines else ""
 
 
+def _git_working_directory(repo_root: Path, specs_dir: Path) -> Path:
+    """Find the nearest existing ancestor used to query Git."""
+    candidate = specs_dir if specs_dir.is_dir() else specs_dir.parent
+    repo_root = repo_root.resolve()
+    while True:
+        if candidate.exists() or candidate == repo_root:
+            return candidate
+        if candidate == candidate.parent or candidate == repo_root:
+            return repo_root
+        candidate = candidate.parent
+
+
+def _prompt_for_specs_directory(repo_root: Path, current: str) -> str | None:
+    print(
+        f"No Git repository was found for specs_directory '{current}'.",
+        file=sys.stderr,
+    )
+    print("Enter a repository-relative specs directory, or press Enter to cancel:", file=sys.stderr)
+    try:
+        entered = input("> ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return None
+    if not entered:
+        return None
+    try:
+        normalized = normalize_specs_directory(entered)
+        candidate = repo_root / normalized
+        git_dir = _git_working_directory(repo_root, candidate)
+        if not _is_inside_git_work_tree(git_dir):
+            print(f"No Git repository found for '{normalized}'.", file=sys.stderr)
+            return None
+        save_specs_directory(repo_root, normalized)
+        return normalized
+    except (ValueError, OSError, UnicodeError) as exc:
+        print(f"Invalid specs directory: {exc}", file=sys.stderr)
+        return None
+
+
 def _next_sequential_number(specs_dir: Path) -> int:
     """Global maximum NNN- prefix in specs/ plus one (timestamp dirs excluded)."""
     max_num = 0
@@ -231,16 +273,33 @@ def main(argv: list[str] | None = None) -> int:
 
     repo_root = get_repo_root(Path(__file__))
 
-    # Git is used only to READ repository/branch state.
-    if not _is_inside_git_work_tree(repo_root):
-        print(
-            "Spec Kit could not read a Git repository. "
-            "Select/open the project repository first.",
-            file=sys.stderr,
-        )
-        return 1
+    # Resolve the configured specs directory BEFORE reading Git state: in
+    # monorepo layouts the specs directory may belong to a subproject with
+    # its own Git repository, so Git state is read from the project that
+    # owns specs_directory.
+    specs_rel = resolve_specs_directory(repo_root)
+    specs_dir = repo_root / specs_rel
+    git_working_dir = _git_working_directory(repo_root, specs_dir)
 
-    current_branch = _get_current_branch(repo_root)
+    # Git is used only to READ repository/branch state.
+    if not _is_inside_git_work_tree(git_working_dir):
+        if args.json_mode:
+            print(
+                "Spec Kit could not read a Git repository for specs_directory "
+                f"'{specs_rel}'. Set a valid path in .specify/init-options.json.",
+                file=sys.stderr,
+            )
+            return 1
+        updated = _prompt_for_specs_directory(repo_root, specs_rel)
+        if updated is None:
+            return 1
+        specs_rel = updated
+        specs_dir = repo_root / specs_rel
+        git_working_dir = _git_working_directory(repo_root, specs_dir)
+        if not _is_inside_git_work_tree(git_working_dir):
+            return 1
+
+    current_branch = _get_current_branch(git_working_dir)
 
     # Explicit --feature-name overrides the branch-derived name.
     explicit_name = args.feature_name_input.strip()
@@ -269,7 +328,6 @@ def main(argv: list[str] | None = None) -> int:
             feature_num = sequential_match.group(1)
             feature_name = explicit_name
         elif _BARE_NAME_PATTERN.match(explicit_name):
-            specs_dir = repo_root / resolve_specs_directory(repo_root)
             next_num = _next_sequential_number(specs_dir)
             feature_num = f"{next_num:03d}"
             feature_name = f"{feature_num}-{explicit_name}"
@@ -333,8 +391,6 @@ def main(argv: list[str] | None = None) -> int:
         feature_name = current_branch
         branch_name = current_branch
 
-    specs_rel = resolve_specs_directory(repo_root)
-    specs_dir = repo_root / specs_rel
     feature_dir = specs_dir / feature_name
     spec_file = feature_dir / "spec.md"
 

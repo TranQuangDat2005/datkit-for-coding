@@ -15,8 +15,8 @@
 # read, e.g. detached HEAD), the script exits with code 3 and -Json output
 # contains {"ACTION": "ASK_USER_FOR_FEATURE_NAME", ...}. The caller can then
 # re-run with -FeatureName <name> to set the feature name explicitly.
-# A bare kebab name (e.g. "user-auth") is auto-numbered by scanning specs/
-# for the next sequential number (e.g. "001-user-auth").
+# A bare kebab name (e.g. "user-auth") is auto-numbered by scanning the
+# configured specs directory for the next sequential number (e.g. "001-user-auth").
 
 [CmdletBinding()]
 param(
@@ -55,7 +55,7 @@ if ($Help) {
     Write-Host "  -FeatureName <name>    Set the feature name explicitly (overrides the branch)."
     Write-Host "                         Accepts '003-user-auth', 'YYYYMMDD-HHMMSS-user-auth',"
     Write-Host "                         or a bare kebab name such as 'user-auth' (auto-numbered"
-    Write-Host "                         by scanning specs/ for the next sequential number)"
+    Write-Host "                         by scanning the configured specs directory)"
     Write-Host "  -Help                  Show this help message"
     Write-Host ""
     Write-Host "Exit codes:"
@@ -72,17 +72,58 @@ if ($Help) {
 $repoRoot = Get-RepoRoot
 Set-Location $repoRoot
 
+# Resolve the configured specs directory BEFORE reading Git state: in monorepo
+# layouts the specs directory may belong to a subproject with its own Git
+# repository, so Git state is read from the project that owns specs_directory.
+$specsRelativeDir = Get-SpecsRelativeDirectory -RepoRoot $repoRoot
+$specsDir = Get-SpecsDirectory -RepoRoot $repoRoot
+$gitWorkingDirectory = if (Test-Path -LiteralPath $specsDir -PathType Container) {
+    $specsDir
+} else {
+    $candidate = Split-Path $specsDir -Parent
+    while (-not (Test-Path -LiteralPath $candidate -PathType Container) -and $candidate -ne $repoRoot) {
+        $candidate = Split-Path $candidate -Parent
+    }
+    $candidate
+}
+
 # Git is used only to READ repository/branch state.
-$insideGitOutput = & git rev-parse --is-inside-work-tree 2>$null
+$insideGitOutput = & git -C $gitWorkingDirectory rev-parse --is-inside-work-tree 2>$null
 $insideGitExitCode = $LASTEXITCODE
 $insideGit = [string]($insideGitOutput | Select-Object -First 1)
 
 if ($insideGitExitCode -ne 0 -or $insideGit.Trim() -ne 'true') {
-    Write-Error "Spec Kit could not read a Git repository. Select/open the project repository first."
-    exit 1
+    if ($Json) {
+        Write-Error "Spec Kit could not read a Git repository for specs_directory '$specsRelativeDir'. Set a valid path in .specify/init-options.json."
+        exit 1
+    }
+    Write-Warning "No Git repository was found for specs_directory '$specsRelativeDir'."
+    $enteredDirectory = Read-Host "Enter a repository-relative specs directory, or press Enter to cancel"
+    if ([string]::IsNullOrWhiteSpace($enteredDirectory)) {
+        exit 1
+    }
+    try {
+        $enteredDirectory = $enteredDirectory.Trim().Replace('\\', '/').Trim('/')
+        if ([System.IO.Path]::IsPathRooted($enteredDirectory) -or $enteredDirectory -match '(^|/)\.\.(/|$)') {
+            throw 'The specs directory must be relative and stay inside the repository.'
+        }
+        $candidateSpecsDir = Join-Path $repoRoot $enteredDirectory
+        $candidateGitDir = if (Test-Path -LiteralPath $candidateSpecsDir -PathType Container) { $candidateSpecsDir } else { Split-Path $candidateSpecsDir -Parent }
+        $candidateGit = & git -C $candidateGitDir rev-parse --is-inside-work-tree 2>$null
+        if ($LASTEXITCODE -ne 0 -or ([string]($candidateGit | Select-Object -First 1)).Trim() -ne 'true') {
+            throw "No Git repository found for '$enteredDirectory'."
+        }
+        Save-SpecsRelativeDirectory -RepoRoot $repoRoot -RelativeDirectory $enteredDirectory
+        $specsRelativeDir = $enteredDirectory
+        $specsDir = $candidateSpecsDir
+        $gitWorkingDirectory = $candidateGitDir
+    } catch {
+        Write-Error $_.Exception.Message
+        exit 1
+    }
 }
 
-$branchOutput = & git branch --show-current 2>$null
+$branchOutput = & git -C $gitWorkingDirectory branch --show-current 2>$null
 $branchExitCode = $LASTEXITCODE
 $currentBranch = [string]($branchOutput | Select-Object -First 1)
 $currentBranch = $currentBranch.Trim()
@@ -114,7 +155,7 @@ function Ask-UserForFeatureNameRequired {
     exit 3
 }
 
-# Global maximum NNN- prefix in specs/ plus one (timestamp dirs excluded).
+# Global maximum NNN- prefix in the configured specs directory plus one (timestamp dirs excluded).
 function Get-NextFeatureNumber {
     param([string]$SpecsDir)
 
@@ -139,27 +180,6 @@ function Get-NextFeatureNumber {
     return $maxNum + 1
 }
 
-# Specs directory: single source of truth is specs_directory in
-# .specify/init-options.json (see specify init --specs-dir). Falls back to
-# specs/ for legacy projects or unusable values.
-$specsRel = 'specs'
-$initOptionsPath = Join-Path $repoRoot '.specify/init-options.json'
-if (Test-Path -LiteralPath $initOptionsPath) {
-    try {
-        $initOptions = Get-Content -LiteralPath $initOptionsPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        $configured = $initOptions.specs_directory
-        if ($configured -is [string] -and $configured.Trim()) {
-            $specsRel = ($configured.Trim() -replace '\\', '/').TrimEnd('/')
-        }
-    }
-    catch {
-        # Malformed init-options.json falls back to the default specs/.
-    }
-}
-if ($specsRel -notmatch '^[A-Za-z0-9][A-Za-z0-9_./ -]*$' -or $specsRel -like '*..*') {
-    $specsRel = 'specs'
-}
-$specsDir = Join-Path $repoRoot $specsRel
 $explicitName = ''
 if ($null -ne $FeatureName) {
     $explicitName = $FeatureName.Trim()
@@ -277,7 +297,7 @@ if (-not $DryRun) {
     # and python twins (Join-Path-free, portable in JSON).
     Save-FeatureJson `
         -RepoRoot $repoRoot `
-        -FeatureDirectory "$specsRel/$featureName"
+        -FeatureDirectory "$specsRelativeDir/$featureName"
 
     # Convenience values for commands executed in this PowerShell process.
     $env:SPECIFY_FEATURE = $featureName
