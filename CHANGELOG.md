@@ -2,6 +2,12 @@
 
 <!-- insert new changelog below this comment -->
 
+## [1.0.6] - 2026-11-06
+
+### Fixed
+
+- Fix PowerShell specs directory resolution by passing an explicit character array to `TrimEnd`, allowing specification creation to proceed.
+
 ## [1.0.3] - 2026-09-28
 
 ### Changed

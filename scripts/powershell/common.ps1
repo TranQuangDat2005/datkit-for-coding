@@ -135,8 +135,8 @@ function Get-SpecsRelativeDirectory {
         throw 'specs_directory must not be empty.'
     }
 
-    $repoFullPath = [System.IO.Path]::GetFullPath($RepoRoot).TrimEnd('/', '\\')
-    $specsFullPath = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $relativeDirectory)).TrimEnd('/', '\\')
+    $repoFullPath = [System.IO.Path]::GetFullPath($RepoRoot).TrimEnd([char[]]'/\')
+    $specsFullPath = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $relativeDirectory)).TrimEnd([char[]]'/\')
     $pathPrefix = $repoFullPath + [System.IO.Path]::DirectorySeparatorChar
     if (-not $specsFullPath.StartsWith($pathPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "specs_directory must stay inside the repository root: $relativeDirectory"
